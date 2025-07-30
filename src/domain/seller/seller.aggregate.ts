@@ -1,5 +1,6 @@
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
+import { CreateOperationInput, Operation } from "../operation/operation.aggregate";
 import { Operator } from "./entities/operator.entity";
 
 // Agregado Seller - Responsável por gerenciar o "pool" de funcionários (Operators).
@@ -10,19 +11,33 @@ export class Seller extends Aggregate {
   constructor(
     readonly id: Id,
     private _name: string,
+    private _cpf: string,
   ) {
     super();
   }
 
-  // Função de criação do vendendor - Método de fabrica
   static create(input: CreateSellerInput) {
     const id = input.id ?? Id.generate();
-    return new Seller(id, input.name);
 
-    // Adicionar evento para notificar o sistema que esse agregado foi criado
+    const seller = new Seller(id, input.name, input.cpf);
+
+    seller.validate();
+
+    return seller;
+
+    // TODO - Adicionar evento para notificar o sistema que esse agregado foi criado
   }
 
-  // Adicionar operator
+  private validate() {
+    if (this._name === undefined) {
+      throw new Error("Name is required");
+    }
+
+    if (this._cpf === undefined) {
+      throw new Error("Cpf is required");
+    }
+  }
+
   addOperator(operator: Operator) {
     const exists = this._operators.find((op) => op.id.equals(operator.id));
 
@@ -31,6 +46,18 @@ export class Seller extends Aggregate {
     }
 
     this._operators.push(operator);
+  }
+
+  createOperation(input: CreateOperationInput): Operation {
+    return Operation.create({
+      sellerId: this.id,
+      name: input.name,
+      date: input.date,
+    });
+  }
+
+  get name(): string {
+    return this._name;
   }
 
   get operators(): Operator[] {
@@ -43,4 +70,5 @@ export class Seller extends Aggregate {
 interface CreateSellerInput {
   id: Id;
   name: string;
+  cpf: string;
 }

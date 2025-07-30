@@ -1,6 +1,7 @@
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
-import { Catalog } from "./entities/catalog.entity";
+import { CatalogItem, CreateCatalogItemInput } from "./entities/catalog-item.entity";
+import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
 
 /* 
   Agregado Operation - representa o coração do sistema, responsável por:
@@ -11,37 +12,63 @@ import { Catalog } from "./entities/catalog.entity";
 */
 
 export class Operation extends Aggregate {
-  private _catalogs: Catalog[] = [];
 
   constructor(
     readonly id: Id,
     readonly _sellerId: Id,
     private _name: string,
-    private _date: Date
+    private _date: Date,
+    private _catalogs: Catalog[] = []
   ) {
     super();
   }
 
-  // Método de fábrica
   static create(input: CreateOperationInput) {
     const id = input.id ?? Id.generate();
-    return new Operation(id, input.sellerId, input.name, input.date);
+
+    const operation = new Operation(id, input.sellerId, input.name, input.date);
+
+    operation.validate();
+
+    return operation;
   }
 
-  // Criar uma Operation.
-
-  /* Criar múltiplos cardápios (Catalogs) para esse evento, como:
-    Um para a Pista
-    Outro para o Camarote
-    Cada um com seus próprios produtos e preços.
-  */
-
-  addCatalog(catalog: Catalog) {
-    const exists = this._catalogs.find((catalog) => catalog.id.equals(catalog.id));
-    if (exists) {
-      throw new Error("Catalog already exists");
+  private validate() {
+    if (this._name === undefined) {
+      throw new Error("Name is required");
     }
+
+    if (this._sellerId === undefined) {
+      throw new Error("Seller is required");
+    }
+
+    if (this._date === undefined) {
+      throw new Error("Date is required");
+    }
+  }
+
+  createCatalog(input: CreateCatalogInput) {
+    const exists = this._catalogs.find((_catalog) => _catalog.type == (input.type));
+    if (exists) {
+      throw new Error(`Catalog of type ${input.type} already exists`);
+    }
+
+    const catalog = Catalog.create(input);
+
     this._catalogs.push(catalog);
+
+    return catalog;
+  }
+
+  addCatalogItem(catalogId: Id, itemInput: CreateCatalogItemInput) {
+    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
+    if (!catalog) {
+      throw new Error("Catalog not found");
+    }
+
+    const newItem = CatalogItem.create(itemInput);
+
+    catalog.addItem(newItem);
   }
 
   // “Escalar” sua equipe para trabalhar em pontos de venda específicos (associados a um catálogo).
@@ -60,9 +87,13 @@ export class Operation extends Aggregate {
     return this._date;
   }
 
+  get catalogs(): Catalog[] {
+    return this._catalogs;
+  }
+
 }
 
-interface CreateOperationInput {
+export interface CreateOperationInput {
   id?: Id
   sellerId: Id;
   name: string;
