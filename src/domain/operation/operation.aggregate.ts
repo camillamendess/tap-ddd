@@ -66,9 +66,11 @@ export class Operation extends Aggregate {
       throw new Error("Catalog not found");
     }
 
-    const newItem = CatalogItem.create(itemInput);
+    const item = CatalogItem.create(itemInput);
 
-    catalog.addItem(newItem);
+    catalog.addItem(item);
+
+    return item;
   }
 
   // “Escalar” sua equipe para trabalhar em pontos de venda específicos (associados a um catálogo).

@@ -3,6 +3,8 @@ import { Id } from "../../common/value-objects/id.value-object";
 
 // Entidade Operator: representa um operador que pode ser um funcionário/membro da equipe de um vendedor.
 
+// TODO - Melhorar essa entidade
+
 export class Operator implements Entity {
   constructor(
     readonly id: Id,

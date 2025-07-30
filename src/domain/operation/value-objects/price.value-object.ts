@@ -8,12 +8,16 @@ export class Price implements ValueObject {
     amount: number,
     currency: string
   ) {
-    if (amount > 0) {
+    if (amount < 0) {
       throw new Error("Price cannot be negative");
     }
 
     this._amount = amount;
     this._currency = currency;
+  }
+
+  static fromNumber(value: number, currency: string): Price {
+    return new Price(value, currency);
   }
 
   get amount(): number {
@@ -22,6 +26,10 @@ export class Price implements ValueObject {
 
   get currency(): string {
     return this._currency;
+  }
+
+  valueOf(): number {
+    return this._amount;
   }
 
   equals(other: Price): boolean {
