@@ -11,6 +11,11 @@ import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
   E as vendas;
 */
 
+export enum OperationStatus {
+  PLANNED = "PLANNED",
+  ACTIVE = "ACTIVE"
+}
+
 export class Operation extends Aggregate {
 
   constructor(
@@ -18,6 +23,7 @@ export class Operation extends Aggregate {
     readonly _sellerId: Id,
     private _name: string,
     private _date: Date,
+    private _status: OperationStatus = OperationStatus.PLANNED,
     private _catalogs: Catalog[] = []
   ) {
     super();
@@ -26,7 +32,7 @@ export class Operation extends Aggregate {
   static create(input: CreateOperationInput) {
     const id = input.id ?? Id.generate();
 
-    const operation = new Operation(id, input.sellerId, input.name, input.date);
+    const operation = new Operation(id, input.sellerId, input.name, input.date, input.status);
 
     operation.validate();
 
@@ -34,15 +40,19 @@ export class Operation extends Aggregate {
   }
 
   private validate() {
-    if (this._name === undefined) {
+    if (!(this.id instanceof Id)) {
+      throw new Error("Invalid ID type");
+    }
+
+    if (!this._name || this._name.trim() === "") {
       throw new Error("Name is required");
     }
 
-    if (this._sellerId === undefined) {
+    if (!this._sellerId) {
       throw new Error("Seller is required");
     }
 
-    if (this._date === undefined) {
+    if (!this._date) {
       throw new Error("Date is required");
     }
   }
@@ -73,6 +83,19 @@ export class Operation extends Aggregate {
     return item;
   }
 
+  activate() {
+    if (this._catalogs.length === 0) {
+      throw new Error("Cannot activate operation without at least one catalog");
+    }
+
+    const hasItems = this._catalogs.some((c) => c.items.length > 0);
+    if (!hasItems) {
+      throw new Error("Cannot activate operation without at least one catalog containing items");
+    }
+
+    this._status = OperationStatus.ACTIVE;
+  }
+
   // “Escalar” sua equipe para trabalhar em pontos de venda específicos (associados a um catálogo).
 
   // Ter um funcionário no caixa registrando todas as vendas de fichas, para que ele possa ver o faturamento em tempo real.
@@ -93,6 +116,10 @@ export class Operation extends Aggregate {
     return this._catalogs;
   }
 
+  get status(): OperationStatus {
+    return this._status;
+  }
+
 }
 
 export interface CreateOperationInput {
@@ -100,4 +127,5 @@ export interface CreateOperationInput {
   sellerId: Id;
   name: string;
   date: Date;
+  status?: OperationStatus;
 }
