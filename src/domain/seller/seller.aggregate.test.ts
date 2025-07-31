@@ -1,4 +1,5 @@
 import { Id } from "../common/value-objects/id.value-object";
+import { Operation } from "../operation/operation.aggregate";
 import { Operator } from "./entities/operator.entity";
 import { Seller } from "./seller.aggregate";
 
@@ -104,4 +105,22 @@ describe("Seller", () => {
       expect(result).toThrow(`Operator not found`);
     });
   });
+
+  describe("Operation creation", () => {
+    it("should create an operation from seller successfully", () => {
+      const seller = Seller.create({
+        name: "Camilla",
+        cpf: "123456789"
+      });
+
+      const operation = seller.createOperation({
+        name: "Festa Junina",
+        date: new Date("2025-08-01"),
+        sellerId: seller.id,
+      });
+
+      expect(operation).toBeInstanceOf(Operation);
+      expect(operation.sellerId.equals(seller.id)).toBe(true);
+    });
+  })
 });
