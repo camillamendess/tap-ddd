@@ -5,6 +5,8 @@ import { CreateOperatorInput, Operator } from "./entities/operator.entity";
 
 // Agregado Seller - Responsável por gerenciar o "pool" de funcionários (Operators).
 
+// TODO - CFP pode ser um value-object
+
 export class Seller extends Aggregate {
   constructor(
     readonly id: Id,

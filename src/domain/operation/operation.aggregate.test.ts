@@ -2,6 +2,7 @@ import { Id } from "../common/value-objects/id.value-object";
 import { CatalogItem } from "./entities/catalog-item.entity";
 import { Catalog, CatalogType } from "./entities/catalog.entity";
 import { Operation } from "./operation.aggregate";
+import { WorkAssignment, WorkRole } from "./value-objects/Assignment.value-object";
 import { Price } from "./value-objects/price.value-object";
 
 describe("Operation", () => {
@@ -9,7 +10,7 @@ describe("Operation", () => {
     it("should create an operation successfully", () => {
       const input = {
         sellerId: Id.generate(),
-        name: "Festa Junina",
+        name: "Festa",
         date: new Date("2025-08-01"),
       };
 
@@ -143,7 +144,7 @@ describe("Catalog item management", () => {
   it("should throw when adding item to a non-existing catalog", () => {
     const operation = Operation.create({
       sellerId: Id.generate(),
-      name: "Festa Junina",
+      name: "Festival de Inverno",
       date: new Date()
     });
 
@@ -158,5 +159,68 @@ describe("Catalog item management", () => {
       });
 
     expect(result).toThrow("Catalog not found");
+  });
+
+  describe("Work Assignment", () => {
+    it("should assign an operator to a catalog successfully", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival de Inverno",
+        date: new Date(),
+      });
+
+      const catalog = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const operatorId = Id.generate();
+      const assignment = operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
+
+      expect(assignment).toBeInstanceOf(WorkAssignment);
+      expect(operation.assignments.length).toBe(1);
+      expect(operation.assignments[0].operatorId.equals(operatorId)).toBe(true);
+      expect(operation.assignments[0].catalogId.equals(catalog.id)).toBe(true);
+      expect(operation.assignments[0].role).toBe(WorkRole.CAIXA);
+    });
+
+    it("should throw if operator is already assigned to the same catalog and role", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival de Inverno",
+        date: new Date()
+      });
+
+      const catalog = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const operatorId = Id.generate();
+      operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
+
+      const result = () =>
+        operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
+
+      expect(result).toThrow("Operator already assigned to this catalog with this role");
+    });
+
+    it("should throw if catalog does not exist", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival de Inverno",
+        date: new Date()
+      });
+
+      const invalidCatalogId = Id.generate();
+      const operatorId = Id.generate();
+
+      const result = () =>
+        operation.assignOperator(operatorId, invalidCatalogId, WorkRole.CAIXA);
+
+      expect(result).toThrow("Catalog not found");
+    });
   });
 });

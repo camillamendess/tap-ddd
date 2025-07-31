@@ -2,14 +2,7 @@ import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
 import { CatalogItem, CreateCatalogItemInput } from "./entities/catalog-item.entity";
 import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
-
-/* 
-  Agregado Operation - representa o coração do sistema, responsável por:
-  Gerenciar o evento;
-  Seus múltiplos catálogos;
-  A escala da equipe;
-  E as vendas;
-*/
+import { WorkAssignment, WorkRole } from "./value-objects/Assignment.value-object";
 
 export enum OperationStatus {
   PLANNED = "PLANNED",
@@ -24,7 +17,8 @@ export class Operation extends Aggregate {
     private _name: string,
     private _date: Date,
     private _status: OperationStatus = OperationStatus.PLANNED,
-    private _catalogs: Catalog[] = []
+    private _catalogs: Catalog[] = [],
+    private _assignments: WorkAssignment[] = []
   ) {
     super();
   }
@@ -32,7 +26,13 @@ export class Operation extends Aggregate {
   static create(input: CreateOperationInput) {
     const id = input.id ?? Id.generate();
 
-    const operation = new Operation(id, input.sellerId, input.name, input.date, input.status);
+    const operation = new Operation(
+      id,
+      input.sellerId,
+      input.name,
+      input.date,
+      input.status
+    );
 
     operation.validate();
 
@@ -83,6 +83,25 @@ export class Operation extends Aggregate {
     return item;
   }
 
+  assignOperator(operatorId: Id, catalogId: Id, role: WorkRole) {
+    const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId)); // Se retornar true existe
+
+    if (!catalogExists) {
+      throw new Error("Catalog not found");
+    }
+
+    const newAssignment = new WorkAssignment(operatorId, catalogId, role);
+
+    const alreadyAssigned = this._assignments.some((a) => a.equals(newAssignment));
+    if (alreadyAssigned) {
+      throw new Error("Operator already assigned to this catalog with this role");
+    }
+
+    this._assignments.push(newAssignment);
+
+    return newAssignment;
+  }
+
   activate() {
     if (this._catalogs.length === 0) {
       throw new Error("Cannot activate operation without at least one catalog");
@@ -95,8 +114,6 @@ export class Operation extends Aggregate {
 
     this._status = OperationStatus.ACTIVE;
   }
-
-  // “Escalar” sua equipe para trabalhar em pontos de venda específicos (associados a um catálogo).
 
   // Ter um funcionário no caixa registrando todas as vendas de fichas, para que ele possa ver o faturamento em tempo real.
 
@@ -118,6 +135,10 @@ export class Operation extends Aggregate {
 
   get status(): OperationStatus {
     return this._status;
+  }
+
+  get assignments(): WorkAssignment[] {
+    return this._assignments;
   }
 
 }
