@@ -19,7 +19,7 @@ export class Id implements ValueObject {
     return other.value === this.value;
   }
 
-  getValue(): string {
+  toString(): string {
     return this.value;
   }
 }

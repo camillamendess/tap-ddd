@@ -2,7 +2,9 @@ import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
 import { CatalogItem, CreateCatalogItemInput } from "./entities/catalog-item.entity";
 import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
-import { WorkAssignment, WorkRole } from "./value-objects/Assignment.value-object";
+import { Sale } from "./entities/sale.entity";
+import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
+import { SaleItem } from "./value-objects/sale-item.value-object";
 
 export enum OperationStatus {
   PLANNED = "PLANNED",
@@ -10,7 +12,6 @@ export enum OperationStatus {
 }
 
 export class Operation extends Aggregate {
-
   constructor(
     readonly id: Id,
     readonly _sellerId: Id,
@@ -18,7 +19,8 @@ export class Operation extends Aggregate {
     private _date: Date,
     private _status: OperationStatus = OperationStatus.PLANNED,
     private _catalogs: Catalog[] = [],
-    private _assignments: WorkAssignment[] = []
+    private _assignments: WorkAssignment[] = [],
+    private _sales: Sale[] = []
   ) {
     super();
   }
@@ -57,6 +59,19 @@ export class Operation extends Aggregate {
     }
   }
 
+  activate() {
+    if (this._catalogs.length === 0) {
+      throw new Error("Cannot activate operation without at least one catalog");
+    }
+
+    const hasItems = this._catalogs.some((c) => c.items.length > 0);
+    if (!hasItems) {
+      throw new Error("Cannot activate operation without at least one catalog containing items");
+    }
+
+    this._status = OperationStatus.ACTIVE;
+  }
+
   createCatalog(input: CreateCatalogInput) {
     const exists = this._catalogs.find((_catalog) => _catalog.type == (input.type));
     if (exists) {
@@ -84,7 +99,7 @@ export class Operation extends Aggregate {
   }
 
   assignOperator(operatorId: Id, catalogId: Id, role: WorkRole) {
-    const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId)); // Se retornar true existe
+    const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId));
 
     if (!catalogExists) {
       throw new Error("Catalog not found");
@@ -102,20 +117,46 @@ export class Operation extends Aggregate {
     return newAssignment;
   }
 
-  activate() {
-    if (this._catalogs.length === 0) {
-      throw new Error("Cannot activate operation without at least one catalog");
+  registerSale(operatorId: Id, catalogId: Id, items: { itemId: Id, quantity: number }[]): Sale {
+    if (this._status !== OperationStatus.ACTIVE) {
+      throw new Error("Operation is not active");
     }
 
-    const hasItems = this._catalogs.some((c) => c.items.length > 0);
-    if (!hasItems) {
-      throw new Error("Cannot activate operation without at least one catalog containing items");
+    const isAssigned = this._assignments.some(a =>
+      a.equals(new WorkAssignment(operatorId, catalogId, "CAIXA"))
+    );
+
+    if (!isAssigned) {
+      throw new Error("Operator not assigned to this catalog");
     }
 
-    this._status = OperationStatus.ACTIVE;
+    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
+    if (!catalog) {
+      throw new Error("Catalog not found");
+    }
+
+    const saleItems = items.map(inputItem => {
+      const catalogItem = catalog.items.find(i => i.id.equals(inputItem.itemId));
+      if (!catalogItem) {
+        throw new Error(`Item ${inputItem.itemId.toString()} not found in catalog`);
+      }
+      return new SaleItem(
+        catalogItem.id,
+        catalogItem.name,
+        inputItem.quantity,
+        catalogItem.price.amount,
+      );
+    });
+
+    const sale = Sale.create({
+      operatorId,
+      catalogId,
+      items: saleItems,
+    });
+
+    this._sales.push(sale);
+    return sale;
   }
-
-  // Ter um funcionário no caixa registrando todas as vendas de fichas, para que ele possa ver o faturamento em tempo real.
 
   get sellerId(): Id {
     return this._sellerId;
@@ -141,6 +182,9 @@ export class Operation extends Aggregate {
     return this._assignments;
   }
 
+  get sales(): Sale[] {
+    return this._sales;
+  }
 }
 
 export interface CreateOperationInput {

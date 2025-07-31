@@ -1,8 +1,9 @@
 import { Id } from "../common/value-objects/id.value-object";
 import { CatalogItem } from "./entities/catalog-item.entity";
 import { Catalog, CatalogType } from "./entities/catalog.entity";
-import { Operation } from "./operation.aggregate";
-import { WorkAssignment, WorkRole } from "./value-objects/Assignment.value-object";
+import { Sale } from "./entities/sale.entity";
+import { Operation, OperationStatus } from "./operation.aggregate";
+import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
 import { Price } from "./value-objects/price.value-object";
 
 describe("Operation", () => {
@@ -221,6 +222,138 @@ describe("Catalog item management", () => {
         operation.assignOperator(operatorId, invalidCatalogId, WorkRole.CAIXA);
 
       expect(result).toThrow("Catalog not found");
+    });
+  });
+
+  describe("Sales registration", () => {
+    it("should register a sale successfully when the operator has the right permission", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival",
+        date: new Date(),
+        status: OperationStatus.ACTIVE
+      });
+
+      const catalog = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const item = operation.addCatalogItem(catalog.id, {
+        id: Id.generate(),
+        name: "Cerveja",
+        category: "Bebida",
+        price: Price.fromNumber(10, "BRL")
+      });
+
+      const operatorId = Id.generate();
+      operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
+
+      const sale = operation.registerSale(operatorId, catalog.id, [
+        { itemId: item.id, quantity: 2 }
+      ]);
+
+      expect(sale).toBeInstanceOf(Sale);
+      expect(sale.total).toBe(20);
+    });
+
+    it("should not register a sale if the operator doesn't have the right permission", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival",
+        date: new Date(),
+        status: OperationStatus.ACTIVE
+      });
+
+      const catalog = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const item = operation.addCatalogItem(catalog.id, {
+        id: Id.generate(),
+        name: "Cerveja",
+        category: "Bebida",
+        price: Price.fromNumber(10, "BRL")
+      });
+
+      const operatorId = Id.generate();
+
+      const result = () => operation.registerSale(operatorId, catalog.id, [
+        { itemId: item.id, quantity: 1 }
+      ]);
+
+      expect(result).toThrow("Operator not assigned to this catalog");
+    });
+
+    it("should not allow an operator assigned to one catalog to register sales from another catalog", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival",
+        date: new Date(),
+        status: OperationStatus.ACTIVE
+      });
+
+      const catalog1 = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const catalog2 = operation.createCatalog({
+        id: Id.generate(),
+        name: "Camarote",
+        type: CatalogType.CAMAROTE
+      });
+
+      const itemCamarote = operation.addCatalogItem(catalog2.id, {
+        id: Id.generate(),
+        name: "Whisky",
+        category: "Bebida",
+        price: Price.fromNumber(50, "BRL")
+      });
+
+      const operatorId = Id.generate();
+      operation.assignOperator(operatorId, catalog1.id, WorkRole.BAR);
+
+      const result = () => operation.registerSale(operatorId, catalog2.id, [
+        { itemId: itemCamarote.id, quantity: 1 }
+      ]);
+
+      expect(result).toThrow("Operator not assigned to this catalog");
+    });
+
+    it("should not register a sale if the operation is not active", () => {
+      const operation = Operation.create({
+        sellerId: Id.generate(),
+        name: "Festival",
+        date: new Date(),
+        status: OperationStatus.PLANNED
+      });
+
+      const catalog = operation.createCatalog({
+        id: Id.generate(),
+        name: "Pista",
+        type: CatalogType.PISTA
+      });
+
+      const item = operation.addCatalogItem(catalog.id, {
+        id: Id.generate(),
+        name: "Cerveja",
+        category: "Bebida",
+        price: Price.fromNumber(10, "BRL")
+      });
+
+      const operatorId = Id.generate();
+      operation.assignOperator(operatorId, catalog.id, WorkRole.BAR);
+
+      const result = () => operation.registerSale(operatorId, catalog.id, [
+        { itemId: item.id, quantity: 1 }
+      ])
+
+      expect(result).toThrow("Operation is not active");
     });
   });
 });
