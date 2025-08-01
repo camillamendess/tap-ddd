@@ -42,7 +42,7 @@ export class Seller extends Aggregate {
       throw new Error("Cpf is required");
     }
 
-    if (this._cpf.trim().length < 9) {
+    if (this._cpf.trim().length < 11) {
       throw new Error("Cpf must be a string of 11 digits");
     }
   }
@@ -86,7 +86,7 @@ export class Seller extends Aggregate {
     return this._cpf;
   }
 
-  get operators(): Operator[] {
+  get operators(): ReadonlyArray<Operator> {
     return this._operators;
   }
 

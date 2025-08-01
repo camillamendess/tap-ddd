@@ -1,15 +1,15 @@
 import { ValueObject } from "../../common/value-object";
 import { Id } from "../../common/value-objects/id.value-object";
+import { Price } from "./price.value-object";
 
 export class SaleItem implements ValueObject {
   constructor(
     public readonly itemId: Id,
     public readonly name: string,
     public readonly quantity: number,
-    public readonly price: number
+    public readonly price: Price
   ) {
     if (quantity <= 0) throw new Error("Quantity must be greater than 0");
-    if (price < 0) throw new Error("Price must be greater than or equal to 0");
   }
 
   equals(other: SaleItem): boolean {
@@ -22,6 +22,6 @@ export class SaleItem implements ValueObject {
   }
 
   get total(): number {
-    return this.quantity * this.price;
+    return this.quantity * this.price.amount;
   }
 }

@@ -140,11 +140,12 @@ export class Operation extends Aggregate {
       if (!catalogItem) {
         throw new Error(`Item ${inputItem.itemId.toString()} not found in catalog`);
       }
+
       return new SaleItem(
         catalogItem.id,
         catalogItem.name,
         inputItem.quantity,
-        catalogItem.price.amount,
+        catalogItem.price,
       );
     });
 
@@ -170,19 +171,19 @@ export class Operation extends Aggregate {
     return this._date;
   }
 
-  get catalogs(): Catalog[] {
-    return this._catalogs;
-  }
-
   get status(): OperationStatus {
     return this._status;
   }
 
-  get assignments(): WorkAssignment[] {
+  get catalogs(): ReadonlyArray<Catalog> {
+    return this._catalogs;
+  }
+
+  get assignments(): ReadonlyArray<WorkAssignment> {
     return this._assignments;
   }
 
-  get sales(): Sale[] {
+  get sales(): ReadonlyArray<Sale> {
     return this._sales;
   }
 }
