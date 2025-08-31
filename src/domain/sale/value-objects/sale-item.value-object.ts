@@ -17,11 +17,11 @@ export class SaleItem implements ValueObject {
       this.itemId.equals(other.itemId) &&
       this.name === other.name &&
       this.quantity === other.quantity &&
-      this.price === other.price
+      this.price.equals(other.price)
     );
   }
 
   get total(): number {
-    return this.quantity * this.price.amount;
+    return this.price.multiply(this.quantity).valueOf();
   }
 }

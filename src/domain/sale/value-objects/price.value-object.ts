@@ -39,6 +39,16 @@ export class Price implements ValueObject {
     );
   }
 
-  // TODO: add, multiply toString, valueOf
+  add(other: Price): Price {
+    if (this.currency !== other.currency) throw new Error("Currency mismatch");
+    return new Price(this._amount + other._amount, this.currency);
+  }
 
+  multiply(factor: number): Price {
+    return new Price(this._amount * factor, this.currency);
+  }
+
+  toString(): string {
+    return `${this.currency} ${this._amount.toFixed(2)}`;
+  }
 }

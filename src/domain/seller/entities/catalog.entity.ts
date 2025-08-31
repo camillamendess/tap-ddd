@@ -12,6 +12,7 @@ export class Catalog implements Entity {
 
   constructor(
     readonly id: Id,
+    private sellerId: Id,
     private _name: string,
     private _type: string
   ) { }
@@ -21,6 +22,7 @@ export class Catalog implements Entity {
 
     const catalog = new Catalog(
       id,
+      input.sellerId,
       input.name,
       input.type
     );
@@ -65,6 +67,7 @@ export class Catalog implements Entity {
 
 export interface CreateCatalogInput {
   id?: Id;
+  sellerId: Id;
   name: string;
   type: CatalogType;
 }

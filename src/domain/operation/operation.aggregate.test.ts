@@ -1,10 +1,10 @@
 import { Id } from "../common/value-objects/id.value-object";
-import { CatalogItem } from "./entities/catalog-item.entity";
-import { Catalog, CatalogType } from "./entities/catalog.entity";
-import { Sale } from "./entities/sale.entity";
+import { CatalogItem } from "../seller/entities/catalog-item.entity";
+import { Catalog, CatalogType } from "../seller/entities/catalog.entity";
+import { Sale } from "../sale/sale.aggregate";
 import { Operation, OperationStatus } from "./operation.aggregate";
-import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
-import { Price } from "./value-objects/price.value-object";
+import { WorkAssignment, WorkRole } from "../seller/value-objects/assignment.value-object";
+import { Price } from "../sale/value-objects/price.value-object";
 
 describe("Operation", () => {
   describe("Creation", () => {

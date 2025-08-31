@@ -1,10 +1,5 @@
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
-import { CatalogItem, CreateCatalogItemInput } from "./entities/catalog-item.entity";
-import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
-import { Sale } from "./entities/sale.entity";
-import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
-import { SaleItem } from "./value-objects/sale-item.value-object";
 
 export enum OperationStatus {
   PLANNED = "PLANNED",
@@ -14,13 +9,10 @@ export enum OperationStatus {
 export class Operation extends Aggregate {
   constructor(
     readonly id: Id,
-    readonly _sellerId: Id,
     private _name: string,
     private _date: Date,
     private _status: OperationStatus = OperationStatus.PLANNED,
-    private _catalogs: Catalog[] = [],
-    private _assignments: WorkAssignment[] = [],
-    private _sales: Sale[] = []
+    private _sellers: Id[] = [],
   ) {
     super();
   }
@@ -30,7 +22,6 @@ export class Operation extends Aggregate {
 
     const operation = new Operation(
       id,
-      input.sellerId,
       input.name,
       input.date,
       input.status
@@ -50,117 +41,31 @@ export class Operation extends Aggregate {
       throw new Error("Name is required");
     }
 
-    if (!this._sellerId) {
-      throw new Error("Seller is required");
-    }
-
     if (!this._date) {
       throw new Error("Date is required");
     }
   }
 
-  activate() {
-    if (this._catalogs.length === 0) {
-      throw new Error("Cannot activate operation without at least one catalog");
-    }
+  addSeller(sellerId: Id) {
+    const exists = this._sellers.some(id => id.equals(sellerId));
 
-    const hasItems = this._catalogs.some((c) => c.items.length > 0);
-    if (!hasItems) {
-      throw new Error("Cannot activate operation without at least one catalog containing items");
-    }
-
-    this._status = OperationStatus.ACTIVE;
-  }
-
-  createCatalog(input: CreateCatalogInput) {
-    const exists = this._catalogs.find((_catalog) => _catalog.type == (input.type));
     if (exists) {
-      throw new Error(`Catalog of type ${input.type} already exists`);
+      throw new Error("Seller already added to this operation");
     }
 
-    const catalog = Catalog.create(input);
-
-    this._catalogs.push(catalog);
-
-    return catalog;
+    this._sellers.push(sellerId);
   }
 
-  addCatalogItem(catalogId: Id, itemInput: CreateCatalogItemInput) {
-    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
-    if (!catalog) {
-      throw new Error("Catalog not found");
+  removeSeller(sellerId: Id) {
+    const index = this._sellers.findIndex(id => id.equals(sellerId)); // findIndex percorre o array procurando o índice do seller cujo id é igual ao sellerId passado, retorna o indice.
+    if (index === -1) {
+      throw new Error("Seller not found in this operation");
     }
-
-    const item = CatalogItem.create(itemInput);
-
-    catalog.addItem(item);
-
-    return item;
+    this._sellers.splice(index, 1); // splice remove 1 elemento do array _sellers na posição index.
   }
 
-  assignOperator(operatorId: Id, catalogId: Id, role: WorkRole) {
-    const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId));
-
-    if (!catalogExists) {
-      throw new Error("Catalog not found");
-    }
-
-    const newAssignment = new WorkAssignment(operatorId, catalogId, role);
-
-    const alreadyAssigned = this._assignments.some((a) => a.equals(newAssignment));
-    if (alreadyAssigned) {
-      throw new Error("Operator already assigned to this catalog with this role");
-    }
-
-    this._assignments.push(newAssignment);
-
-    return newAssignment;
-  }
-
-  registerSale(operatorId: Id, catalogId: Id, items: { itemId: Id, quantity: number }[]): Sale {
-    if (this._status !== OperationStatus.ACTIVE) {
-      throw new Error("Operation is not active");
-    }
-
-    const isAssigned = this._assignments.some(a =>
-      a.equals(new WorkAssignment(operatorId, catalogId, "CAIXA"))
-    );
-
-    if (!isAssigned) {
-      throw new Error("Operator not assigned to this catalog");
-    }
-
-    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
-    if (!catalog) {
-      throw new Error("Catalog not found");
-    }
-
-    const saleItems = items.map(inputItem => {
-      const catalogItem = catalog.items.find(i => i.id.equals(inputItem.itemId));
-      if (!catalogItem) {
-        throw new Error(`Item ${inputItem.itemId.toString()} not found in catalog`);
-      }
-
-      return new SaleItem(
-        catalogItem.id,
-        catalogItem.name,
-        inputItem.quantity,
-        catalogItem.price,
-      );
-    });
-
-    const sale = Sale.create({
-      operatorId,
-      catalogId,
-      items: saleItems,
-    });
-
-    this._sales.push(sale);
-    return sale;
-  }
-
-  get sellerId(): Id {
-    return this._sellerId;
+  activate() {
+    this._status = OperationStatus.ACTIVE;
   }
 
   get name(): string {
@@ -175,22 +80,13 @@ export class Operation extends Aggregate {
     return this._status;
   }
 
-  get catalogs(): ReadonlyArray<Catalog> {
-    return this._catalogs;
-  }
-
-  get assignments(): ReadonlyArray<WorkAssignment> {
-    return this._assignments;
-  }
-
-  get sales(): ReadonlyArray<Sale> {
-    return this._sales;
+  get sellerIds(): ReadonlyArray<Id> {
+    return this._sellers;
   }
 }
 
 export interface CreateOperationInput {
-  id?: Id
-  sellerId: Id;
+  id?: Id;
   name: string;
   date: Date;
   status?: OperationStatus;

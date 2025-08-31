@@ -1,18 +1,25 @@
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
 import { CreateOperationInput, Operation } from "../operation/operation.aggregate";
+import { CatalogItem, CreateCatalogItemInput } from "./entities/catalog-item.entity";
+import { Catalog, CreateCatalogInput } from "./entities/catalog.entity";
 import { CreateOperatorInput, Operator } from "./entities/operator.entity";
-
-// Agregado Seller - Responsável por gerenciar o "pool" de funcionários (Operators).
+import { Sale } from "../sale/sale.aggregate";
+import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
+import { SaleItem } from "../sale/value-objects/sale-item.value-object";
 
 // TODO - CFP pode ser um value-object
 
 export class Seller extends Aggregate {
   constructor(
     readonly id: Id,
+    private _operationId: Id,
     private _name: string,
     private _cpf: string,
-    private _operators: Operator[] = []
+    private _operators: Operator[] = [],
+    private _catalogs: Catalog[] = [],
+    private _assignments: WorkAssignment[] = [],
+    private _sales: Sale[] = []
   ) {
     super();
   }
@@ -20,13 +27,11 @@ export class Seller extends Aggregate {
   static create(input: CreateSellerInput) {
     const id = input.id ?? Id.generate();
 
-    const seller = new Seller(id, input.name, input.cpf);
+    const seller = new Seller(id, input.operationId, input.name, input.cpf);
 
     seller.validate();
 
     return seller;
-
-    // TODO - Adicionar evento para notificar o sistema que esse agregado foi criado
   }
 
   private validate() {
@@ -48,12 +53,17 @@ export class Seller extends Aggregate {
   }
 
   addOperator(input: CreateOperatorInput): Operator {
+    // Se o sellerId do operador não for igual ao id do seller atual (this.id), significa que ele pertence a outro Seller.s
+    if (input.sellerId && !input.sellerId.equals(this.id)) {
+      throw new Error("Operator belongs to another Seller");
+    }
+
     const exists = this._operators.find(op => op.id.equals(input.id));
     if (exists) {
       throw new Error("Operator already exists");
     }
 
-    const operator = Operator.create(input);
+    const operator = Operator.create({ ...input, sellerId: this.id });
 
     this._operators.push(operator);
 
@@ -70,12 +80,112 @@ export class Seller extends Aggregate {
     return operator;
   }
 
-  createOperation(input: CreateOperationInput): Operation {
-    return Operation.create({
-      sellerId: this.id,
-      name: input.name,
-      date: input.date,
+  // Omit<T, K> é um helper do TypeScript -> O sellerId é automaticamente injetado somente pelo Seller, mais seguro
+  createCatalog(input: Omit<CreateCatalogInput, "sellerId">): Catalog {
+    const exists = this._catalogs.find((_catalog) => _catalog.type == (input.type));
+    if (exists) {
+      throw new Error(`Catalog of type ${input.type} already exists for this seller`);
+    }
+
+    const catalog = Catalog.create({ ...input, sellerId: this.id });
+
+    this._catalogs.push(catalog);
+
+    return catalog;
+  }
+
+
+  addCatalogItem(catalogId: Id, itemInput: Omit<CreateCatalogItemInput, "catalogId">): CatalogItem {
+    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
+    if (!catalog) {
+      throw new Error("Catalog not found");
+    }
+
+    const item = CatalogItem.create({
+      ...itemInput,
+      catalogId: catalog.id,
     });
+
+    catalog.addItem(item);
+
+    return item;
+  }
+
+  assignOperatorToCatalog(operatorId: Id, catalogId: Id, role: WorkRole) {
+    const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId));
+
+    if (!catalogExists) {
+      throw new Error("Catalog not found for this seller");
+    }
+
+    const operatorExists = this._operators.some(o => o.id.equals(operatorId));
+    if (!operatorExists) {
+      throw new Error("Operator not found for this seller");
+    }
+
+    const newAssignment = new WorkAssignment(operatorId, catalogId, role);
+
+    const alreadyAssigned = this._assignments.some((a) => a.equals(newAssignment));
+    if (alreadyAssigned) {
+      throw new Error("Operator already assigned to this catalog with this role");
+    }
+
+    this._assignments.push(newAssignment);
+
+    return newAssignment;
+  }
+
+  registerSale(operatorId: Id, catalogId: Id, items: { itemId: Id, quantity: number }[]): Sale {
+
+    // Verifica se o operador existe nesse seller
+    const operator = this._operators.find(o => o.id.equals(operatorId));
+    if (!operator) {
+      throw new Error("Operator not found for this seller");
+    }
+
+    // Verifica se o catálogo existe nesse seller
+    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
+    if (!catalog) {
+      throw new Error("Catalog not found for this seller");
+    }
+
+    const isAssigned = this._assignments.some(a =>
+      a.equals(new WorkAssignment(operatorId, catalogId, "CAIXA"))
+    );
+
+    // Verifica se o operador está atribuído ao catálogo
+    if (!isAssigned) {
+      throw new Error("Operator not assigned to this catalog");
+    }
+
+    // Cria os SaleItems
+    const saleItems = items.map(inputItem => {
+      const catalogItem = catalog.items.find(i => i.id.equals(inputItem.itemId));
+      if (!catalogItem) {
+        throw new Error(`Item ${inputItem.itemId.toString()} not found in catalog`);
+      }
+
+      return new SaleItem(
+        catalogItem.id,
+        catalogItem.name,
+        inputItem.quantity,
+        catalogItem.price,
+      );
+    });
+
+    // Cria a venda
+    const sale = Sale.create({
+      operatorId,
+      catalogId,
+      items: saleItems,
+    });
+
+    this._sales.push(sale);
+    return sale;
+  }
+
+  get operationId(): Id {
+    return this._operationId;
   }
 
   get name(): string {
@@ -90,11 +200,24 @@ export class Seller extends Aggregate {
     return this._operators;
   }
 
+  get catalogs(): ReadonlyArray<Catalog> {
+    return this._catalogs;
+  }
+
+  get assignments(): ReadonlyArray<WorkAssignment> {
+    return this._assignments;
+  }
+
+  get sales(): ReadonlyArray<Sale> {
+    return this._sales;
+  }
+
   // TODO - Adicionar toJSON() e fromJSON()
 }
 
 interface CreateSellerInput {
   id?: Id;
+  operationId: Id;
   name: string;
   cpf: string;
 }

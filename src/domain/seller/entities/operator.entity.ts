@@ -4,13 +4,14 @@ import { Id } from "../../common/value-objects/id.value-object";
 export class Operator implements Entity {
   constructor(
     readonly id: Id,
+    private _sellerId: Id,
     private _name: string
   ) { }
 
   static create(input: CreateOperatorInput) {
     const id = input.id ?? Id.generate();
 
-    const operator = new Operator(id, input.name);
+    const operator = new Operator(id, input.sellerId, input.name);
 
     operator.validate();
 
@@ -25,6 +26,10 @@ export class Operator implements Entity {
     if (!this._name || this._name.trim() === "") {
       throw new Error("Name is required");
     }
+
+    if (!this._sellerId || this._sellerId === null) {
+      throw new Error("Seller is required");
+    }
   }
 
   get name(): string {
@@ -34,5 +39,6 @@ export class Operator implements Entity {
 
 export interface CreateOperatorInput {
   id: Id;
+  sellerId: Id;
   name: string;
 }

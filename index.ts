@@ -1,6 +1,6 @@
 import { Id } from "./src/domain/common/value-objects/id.value-object";
-import { CatalogType } from "./src/domain/operation/entities/catalog.entity";
-import { Price } from "./src/domain/operation/value-objects/price.value-object";
+import { CatalogType } from "./src/domain/seller/entities/catalog.entity";
+import { Price } from "./src/domain/sale/value-objects/price.value-object";
 import { Seller } from "./src/domain/seller/seller.aggregate";
 
 async function main() {
