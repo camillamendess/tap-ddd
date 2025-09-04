@@ -1,5 +1,5 @@
-import { Id } from "../../../domain/common/value-objects/id.value-object";
-import { Seller } from "../../../domain/seller/seller.aggregate";
+import { Id } from "../../domain/common/value-objects/id.value-object";
+import { Seller } from "../../domain/seller/seller.aggregate";
 
 export interface SellerRepository {
   findById(id: Id): Promise<Seller | null>;

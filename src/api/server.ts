@@ -9,11 +9,11 @@ const operationController = new OperationController();
 const saleController = new SaleController();
 
 // Rotas de operação
-app.post("/operations", (req, res) => operationController.createOperation(req, res));
-app.post("/operations/:operationId/sellers", (req, res) => operationController.addSeller(req, res));
+app.post("/operation", (req, res) => operationController.createOperation(req, res));
+app.post("/operation/seller", (req, res) => operationController.addSeller(req, res));
 
 // Rotas de venda
-app.post("/sales", (req, res) => saleController.registerSale(req, res));
+app.post("/sale", (req, res) => saleController.registerSale(req, res));
 
 const PORT = 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

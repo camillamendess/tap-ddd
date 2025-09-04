@@ -1,14 +1,14 @@
 import { ValueObject } from "../value-object";
 
 export class Cpf implements ValueObject {
-  constructor(
-    private readonly _value: string
-  ) {
-    if (!_value || _value.trim() === "") {
+  private readonly _value: string;
+
+  constructor(value: string) {
+    if (!value || value.trim() === "") {
       throw new Error("CPF is required");
     }
 
-    const cleanedCpf = _value.replace(/\D/g, "");
+    const cleanedCpf = value.replace(/\D/g, "");
     if (cleanedCpf.length !== 11) {
       throw new Error("CPF must be 11 digits");
     }

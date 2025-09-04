@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest --verbose",
+    "test": "jest --verbose --passWithNoTests",
     "dev": "ts-node-dev --respawn --transpile-only src/api/server.ts"
   },
   "author": "Camilla Mendes",

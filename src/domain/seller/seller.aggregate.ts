@@ -126,67 +126,16 @@ export class Seller extends Aggregate {
     return newAssignment;
   }
 
-  registerSale(operatorId: Id, catalogId: Id, items: { itemId: Id, quantity: number }[]): Sale {
-
-    // Verifica se o operador existe nesse seller
-    const operator = this._operators.find(o => o.id.equals(operatorId));
-    if (!operator) {
-      throw new Error("Operator not found for this seller");
-    }
-
-    // Verifica se o catálogo existe nesse seller
-    const catalog = this._catalogs.find(c => c.id.equals(catalogId));
-    if (!catalog) {
-      throw new Error("Catalog not found for this seller");
-    }
-
-    const isAssigned = this._assignments.some(a =>
-      a.equals(new WorkAssignment(operatorId, catalogId, "CAIXA"))
-    );
-
-    // Verifica se o operador está atribuído ao catálogo
-    if (!isAssigned) {
-      throw new Error("Operator not assigned to this catalog");
-    }
-
-    // Cria os SaleItems
-    const saleItems = items.map(inputItem => {
-      const catalogItem = catalog.items.find(i => i.id.equals(inputItem.itemId));
-      if (!catalogItem) {
-        throw new Error(`Item ${inputItem.itemId.toString()} not found in catalog`);
-      }
-
-      return new SaleItem(
-        catalogItem.id,
-        catalogItem.name,
-        inputItem.quantity,
-        catalogItem.price,
-      );
-    });
-
-    // Cria a venda
-    const sale = Sale.create({
-      operationId: this._operationId,
-      operatorId,
-      sellerId: this.id,
-      catalogId,
-      items: saleItems,
-    });
-
-    this._sales.push(sale.id);
-    return sale;
-  }
-
   toJSON() {
     return {
       id: this.id.toString(),
       operationId: this._operationId.toString(),
       name: this._name,
-      cpf: this._cpf.toString(),
-      operators: this._operators.map(op => op.toString()),
-      catalogs: this._catalogs.map(c => c.toString()),
-      assignments: this._assignments.map(a => a.toString()),
-      sales: this._sales.map(s => s.toString())
+      cpf: this._cpf,
+      operators: this._operators,
+      catalogs: this._catalogs,
+      assignments: this._assignments,
+      sales: this._sales
     };
   }
 

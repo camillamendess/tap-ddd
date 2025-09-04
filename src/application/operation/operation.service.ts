@@ -1,9 +1,9 @@
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { CreateOperationInput, Operation } from "../../domain/operation/operation.aggregate";
-import { OperationRepository } from "../../infrastructure/repositories/operation/operation.repository.interface";
+import { OperationRepository } from "../../infrastructure/repositories/operation.repository.interface";
 import { CreateCatalogInput } from "../../domain/seller/entities/catalog.entity";
 import { CreateOperatorInput } from "../../domain/seller/entities/operator.entity";
-import { SellerRepository } from "../../infrastructure/repositories/seller/seller.repository.interface";
+import { SellerRepository } from "../../infrastructure/repositories/seller.repository.interface";
 import { CreateSellerInput, Seller } from "../../domain/seller/seller.aggregate";
 import { WorkRole } from "../../domain/seller/value-objects/assignment.value-object";
 
@@ -19,12 +19,11 @@ export class OperationService {
     return operation;
   }
 
-  async addSeller(operationId: Id, sellerInput: CreateSellerInput) {
-    const operation = await this.operationRepository.findById(operationId);
+  async addSeller(sellerInput: CreateSellerInput) {
+    const operation = await this.operationRepository.findById(sellerInput.operationId);
     if (!operation) throw new Error("Operation not found");
 
-    // cria o seller vinculado a operação
-    const seller = Seller.create({ ...sellerInput, operationId });
+    const seller = Seller.create(sellerInput);
     operation.addSeller(seller.id);
 
     await this.sellerRepository.save(seller);
@@ -42,8 +41,8 @@ export class OperationService {
     await this.operationRepository.save(operation);
   }
 
-  async addOperatorToSeller(sellerId: Id, input: CreateOperatorInput) {
-    const seller = await this.sellerRepository.findById(sellerId);
+  async addOperatorToSeller(input: CreateOperatorInput) {
+    const seller = await this.sellerRepository.findById(input.sellerId);
     if (!seller) throw new Error("Seller not found");
 
     const operator = seller.addOperator(input);

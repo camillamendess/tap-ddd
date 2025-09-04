@@ -1,6 +1,6 @@
-import { Id } from "../../../domain/common/value-objects/id.value-object";
-import { SaleRepository } from "./sale.repository.interface";
-import { Sale } from "../../../domain/sale/sale.aggregate";
+import { Id } from "../../domain/common/value-objects/id.value-object";
+import { SaleRepository } from "../repositories/sale.repository.interface";
+import { Sale } from "../../domain/sale/sale.aggregate";
 
 export class InMemorySaleRepository implements SaleRepository {
   private store = new Map<string, Sale>();

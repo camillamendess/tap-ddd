@@ -1,8 +1,8 @@
 import { Id } from "../common/value-objects/id.value-object";
-import { Operation } from "../operation/operation.aggregate";
 import { Operator } from "./entities/operator.entity";
 import { Seller } from "./seller.aggregate";
 import { SellerBuilder } from "../../tests/builders/seller.builder";
+import { Cpf } from "../common/value-objects/cpf.value-object";
 
 describe("Seller", () => {
   describe("Creation", () => {
@@ -19,12 +19,12 @@ describe("Seller", () => {
 
     it("should throw if cpf is empty", () => {
       const builder = SellerBuilder.create().withCpf("");
-      expect(() => builder.build()).toThrow();
+      expect(() => builder.build()).toThrow("CPF is required");
     });
 
     it("should throw if cpf has less than 11 digits", () => {
       const builder = SellerBuilder.create().withCpf("123");
-      expect(() => builder.build()).toThrow("Cpf must be a string of 11 digits");
+      expect(() => builder.build()).toThrow("CPF must be 11 digits");
     });
   });
 
@@ -34,6 +34,7 @@ describe("Seller", () => {
 
       const input = {
         id: Id.generate(),
+        sellerId: seller.id,
         name: "Flowers",
       };
 
@@ -47,6 +48,7 @@ describe("Seller", () => {
 
       const operator = {
         id: Id.generate(),
+        sellerId: seller.id,
         name: "Flowers",
       };
 
@@ -62,21 +64,6 @@ describe("Seller", () => {
       const invalidId = Id.generate();
 
       expect(() => seller.getOperatorById(invalidId)).toThrow("Operator not found");
-    });
-  });
-
-  describe("Operation creation", () => {
-    it("should create an operation from seller successfully", () => {
-      const seller = SellerBuilder.create().build();
-
-      const operation = seller.createOperation({
-        name: "Festa Junina",
-        date: new Date("2025-08-01"),
-        sellerId: seller.id,
-      });
-
-      expect(operation).toBeInstanceOf(Operation);
-      expect(operation.sellerId.equals(seller.id)).toBe(true);
     });
   });
 });

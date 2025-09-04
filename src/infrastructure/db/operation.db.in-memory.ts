@@ -1,6 +1,6 @@
-import { Id } from "../../../domain/common/value-objects/id.value-object";
-import { Operation } from "../../../domain/operation/operation.aggregate";
-import { OperationRepository } from "./operation.repository.interface";
+import { Id } from "../../domain/common/value-objects/id.value-object";
+import { Operation } from "../../domain/operation/operation.aggregate";
+import { OperationRepository } from "../repositories/operation.repository.interface";
 
 export class InMemoryOperationRepository implements OperationRepository {
   private store = new Map<string, Operation>();

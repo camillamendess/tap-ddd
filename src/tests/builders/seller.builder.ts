@@ -7,7 +7,7 @@ export class SellerBuilder {
   private _id: Id = Id.generate();
   private _operationId: Id = Id.generate();
   private _name: string = "Camilla Store";
-  private _cpf: Cpf = new Cpf("12345678901");
+  private _cpf: string = "12345678901";
   private _operators: Operator[] = [];
 
   static create() {
@@ -30,7 +30,7 @@ export class SellerBuilder {
   }
 
   withCpf(cpf: string) {
-    this._cpf = new Cpf(cpf);
+    this._cpf = cpf;
     return this;
   }
 
@@ -44,7 +44,7 @@ export class SellerBuilder {
       id: this._id,
       operationId: this._operationId,
       name: this._name,
-      cpf: this._cpf,
+      cpf: Cpf.create(this._cpf),
     });
   }
 }

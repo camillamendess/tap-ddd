@@ -1,21 +1,20 @@
 import { Request, Response } from "express";
 import { OperationService } from "../../application/operation/operation.service";
-import { InMemoryOperationRepository } from "../../infrastructure/repositories/operation/operation.repository.in-memory";
-import { InMemorySellerRepository } from "../../infrastructure/repositories/seller/seller.repository.in-memory";
-import { Id } from "../../domain/common/value-objects/id.value-object";
+import { InMemoryOperationRepository } from "../../infrastructure/db/operation.db.in-memory";
+import { InMemorySellerRepository } from "../../infrastructure/db/seller.db.in-memory";
 
 export class OperationController {
-  private service: OperationService;
+  private operetionService: OperationService;
 
   constructor() {
-    const operationRepo = new InMemoryOperationRepository();
-    const sellerRepo = new InMemorySellerRepository();
-    this.service = new OperationService(operationRepo, sellerRepo);
+    const operationRepositoryInMemory = new InMemoryOperationRepository();
+    const sellerRepositoryInMemory = new InMemorySellerRepository();
+    this.operetionService = new OperationService(operationRepositoryInMemory, sellerRepositoryInMemory);
   }
 
   async createOperation(req: Request, res: Response) {
     try {
-      const operation = await this.service.createOperation(req.body);
+      const operation = await this.operetionService.createOperation(req.body);
       res.status(201).json(operation.toJSON());
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -24,9 +23,8 @@ export class OperationController {
 
   async addSeller(req: Request, res: Response) {
     try {
-      const operationId = new Id(req.params.operationId);
-      const seller = await this.service.addSeller(operationId, req.body);
-      res.status(201).json(seller);
+      const seller = await this.operetionService.addSeller(req.body);
+      res.status(201).json(seller.toJSON());
     } catch (err: any) {
       res.status(400).json({ error: err.message });
     }

@@ -1,9 +1,9 @@
 import { Id } from "../../domain/common/value-objects/id.value-object";
-import { OperationRepository } from "../../infrastructure/repositories/operation/operation.repository.interface";
-import { SaleRepository } from "../../infrastructure/repositories/sale/sale.repository.interface";
+import { OperationRepository } from "../../infrastructure/repositories/operation.repository.interface";
+import { SaleRepository } from "../../infrastructure/repositories/sale.repository.interface";
 import { Sale } from "../../domain/sale/sale.aggregate";
 import { SaleItem } from "../../domain/sale/value-objects/sale-item.value-object";
-import { SellerRepository } from "../../infrastructure/repositories/seller/seller.repository.interface";
+import { SellerRepository } from "../../infrastructure/repositories/seller.repository.interface";
 import { WorkAssignment, WorkRole } from "../../domain/seller/value-objects/assignment.value-object";
 
 export class SaleService {
@@ -48,13 +48,6 @@ export class SaleService {
     );
     if (!hasAssignment) throw new Error("Operator not assigned to this catalog");
 
-    // Para mapear precisa buscar o catalogo pelo id ainda
-    // const saleItems: SaleItem[] = items.map(req => {
-    //   const item = catalog.items.find(i => i.id.equals(req.itemId));
-    //   if (!item) throw new Error(`Item ${req.itemId.toString()} not found in catalog`);
-    //   return new SaleItem(item.id, item.name, req.quantity, item.price);
-    // });
-
     // criar Sale como aggregate root
     const sale = Sale.create({
       operationId,
@@ -64,10 +57,6 @@ export class SaleService {
       items
     });
     await this.saleRepository.save(sale);
-
-    // (opcional) gerar tickets e adicioná-los dentro do aggregate Sale
-    // const ticket = Ticket.create({ code: generateCode(), expirationDate: ... });
-    // sale.addTicket(ticket);
 
     return sale;
   }
