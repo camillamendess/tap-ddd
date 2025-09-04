@@ -1,5 +1,6 @@
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
+import { Ticket } from "./entities/ticket.entity";
 import { SaleItem } from "./value-objects/sale-item.value-object";
 
 export class Sale extends Aggregate {
@@ -12,18 +13,20 @@ export class Sale extends Aggregate {
     private _items: SaleItem[],
     private _total: number,
     private _createdAt: Date,
+    private _tickets: Ticket[] = []
   ) {
     super();
   }
 
   static create(input: CreateSaleInput): Sale {
+    const id = input.id ?? Id.generate();
+
     if (!input.items || input.items.length === 0) {
       throw new Error("Sale must have at least one item");
     }
 
     const total = input.items.reduce((accumulator, currentItem) => (accumulator + currentItem.total), 0);
 
-    const id = input.id ?? Id.generate();
 
     const sale = new Sale(
       id,
@@ -49,6 +52,12 @@ export class Sale extends Aggregate {
     if (!this._items || this._items.length === 0) throw new Error("Sale must have at least one item");
     if (typeof this._total !== "number" || this._total <= 0) throw new Error("Total must be greater than zero");
     if (!(this._createdAt instanceof Date)) throw new Error("CreatedAt must be a valid date");
+  }
+
+  addTicket(ticketItems: SaleItem[], code: string, expirationDate: Date): Ticket {
+    const ticket = Ticket.create({ code, expirationDate, items: ticketItems });
+    this._tickets.push(ticket);
+    return ticket;
   }
 
   get operationId(): Id {
@@ -81,7 +90,7 @@ export class Sale extends Aggregate {
 }
 
 export interface CreateSaleInput {
-  id: Id;
+  id?: Id;
   operationId: Id;
   sellerId: Id;
   catalogId: Id;

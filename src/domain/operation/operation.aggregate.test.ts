@@ -1,359 +1,75 @@
+import { OperationBuilder } from "../../tests/builders/operation.builder";
 import { Id } from "../common/value-objects/id.value-object";
-import { CatalogItem } from "../seller/entities/catalog-item.entity";
-import { Catalog, CatalogType } from "../seller/entities/catalog.entity";
-import { Sale } from "../sale/sale.aggregate";
-import { Operation, OperationStatus } from "./operation.aggregate";
-import { WorkAssignment, WorkRole } from "../seller/value-objects/assignment.value-object";
-import { Price } from "../sale/value-objects/price.value-object";
+import { OperationStatus } from "./operation.aggregate";
 
-describe("Operation", () => {
-  describe("Creation", () => {
-    it("should create an operation successfully", () => {
-      const input = {
-        sellerId: Id.generate(),
-        name: "Festa",
-        date: new Date("2025-08-01"),
-      };
+describe("Operation (with builder)", () => {
+  it("should create operation with defaults", () => {
+    const operation = OperationBuilder.create().build();
 
-      const result = Operation.create(input);
-
-      expect(result).toBeInstanceOf(Operation);
-      expect(result.sellerId.equals(input.sellerId)).toBe(true);
-    });
-
-    it("should throw if name is missing", () => {
-      const input = {
-        sellerId: Id.generate(),
-        name: "",
-        date: new Date()
-      };
-
-      const result = () => Operation.create(input);
-
-      expect(result).toThrow("Name is required");
-    });
-
-    it("should throw if sellerId is missing", () => {
-      const input = {
-        sellerId: undefined as any,
-        name: "Festa",
-        date: new Date()
-      };
-
-      const result = () => Operation.create(input);
-
-      expect(result).toThrow("Seller is required");
-    });
-
-    it("should throw if date is missing", () => {
-      const input = {
-        sellerId: Id.generate(),
-        name: "Festa",
-        date: undefined as any
-      };
-
-      const result = () => Operation.create(input);
-
-      expect(result).toThrow("Date is required");
-    });
-
-  });
-});
-
-describe("Catalog management", () => {
-  it("should create a catalog successfully", () => {
-    const operation = Operation.create({
-      sellerId: Id.generate(),
-      name: "Festival de Inverno",
-      date: new Date()
-    });
-
-    const catalog = operation.createCatalog({
-      id: Id.generate(),
-      name: "Pista",
-      type: "PISTA" as CatalogType
-    });
-
-    expect(catalog).toBeInstanceOf(Catalog);
-    expect(operation.catalogs.length).toBe(1);
+    expect(operation.name).toBe("Festa");
+    expect(operation.status).toBe(OperationStatus.PLANNED);
   });
 
-  it("should create multiple catalogs with different types", () => {
-    const operation = Operation.create({
-      sellerId: Id.generate(),
-      name: "Festival de Inverno",
-      date: new Date("2025-08-22")
-    });
+  it("should create operation with custom values", () => {
+    const customId = Id.generate();
+    const sellerId = Id.generate();
+    const operation = OperationBuilder.create()
+      .withId(customId)
+      .withName("Festival de Inverno")
+      .withDate(new Date("2025-08-01"))
+      .withStatus(OperationStatus.ACTIVE)
+      .withSeller(sellerId)
+      .build();
 
-    const pista = operation.createCatalog({ name: "Pista", type: CatalogType.PISTA });
-    const camarote = operation.createCatalog({ name: "Camarote", type: CatalogType.CAMAROTE });
-
-    expect(operation.catalogs.length).toBe(2);
-    expect(operation.catalogs).toContainEqual(pista);
-    expect(operation.catalogs).toContainEqual(camarote);
+    expect(operation.id.equals(customId)).toBe(true);
+    expect(operation.name).toBe("Festival de Inverno");
+    expect(operation.date).toEqual(new Date("2025-08-01"));
+    expect(operation.status).toBe(OperationStatus.ACTIVE);
+    expect(operation.sellerIds[0].equals(sellerId)).toBe(true);
   });
 
-  it("should throw if catalog of same type already exists", () => {
-    const operation = Operation.create({
-      sellerId: Id.generate(),
-      name: "Festival de Inverno",
-      date: new Date()
-    });
+  it("should add a seller successfully", () => {
+    const sellerId = Id.generate();
+    const operation = OperationBuilder.create().build();
 
-    operation.createCatalog({
-      id: Id.generate(),
-      name: "Pista",
-      type: "PISTA" as CatalogType
-    });
+    operation.addSeller(sellerId);
 
-    const result = () =>
-      operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista 2",
-        type: "PISTA" as CatalogType
-      });
-
-    expect(result).toThrow("Catalog of type PISTA already exists");
-  });
-});
-
-describe("Catalog item management", () => {
-  it("should add catalog item successfully", () => {
-    const operation = Operation.create({
-      sellerId: Id.generate(),
-      name: "Festival de Inverno",
-      date: new Date()
-    });
-
-    const catalog = operation.createCatalog({
-      id: Id.generate(),
-      name: "Pista",
-      type: "PISTA" as CatalogType
-    });
-
-    const item = operation.addCatalogItem(catalog.id, {
-      id: Id.generate(),
-      name: "Cerveja",
-      category: "Bebida",
-      price: Price.fromNumber(10, "BRL")
-    });
-
-    expect(item).toBeInstanceOf(CatalogItem);
-    expect(catalog.items.length).toBe(1);
+    expect(operation.sellerIds.length).toBe(1);
+    expect(operation.sellerIds[0].equals(sellerId)).toBe(true);
   });
 
-  it("should throw when adding item to a non-existing catalog", () => {
-    const operation = Operation.create({
-      sellerId: Id.generate(),
-      name: "Festival de Inverno",
-      date: new Date()
-    });
+  it("should remove a seller successfully", () => {
+    const sellerId = Id.generate();
+    const operation = OperationBuilder.create().withSeller(sellerId).build();
 
-    const invalidCatalogId = Id.generate();
+    operation.removeSeller(sellerId);
 
-    const result = () =>
-      operation.addCatalogItem(invalidCatalogId, {
-        id: Id.generate(),
-        name: "Cerveja",
-        category: "Bebida",
-        price: Price.fromNumber(10, "BRL")
-      });
-
-    expect(result).toThrow("Catalog not found");
+    expect(operation.sellerIds.length).toBe(0);
   });
 
-  describe("Work Assignment", () => {
-    it("should assign an operator to a catalog successfully", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival de Inverno",
-        date: new Date(),
-      });
+  it("should throw error when adding the same seller twice", () => {
+    const sellerId = Id.generate();
+    const operation = OperationBuilder.create().withSeller(sellerId).build();
 
-      const catalog = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
-
-      const operatorId = Id.generate();
-      const assignment = operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
-
-      expect(assignment).toBeInstanceOf(WorkAssignment);
-      expect(operation.assignments.length).toBe(1);
-      expect(operation.assignments[0].operatorId.equals(operatorId)).toBe(true);
-      expect(operation.assignments[0].catalogId.equals(catalog.id)).toBe(true);
-      expect(operation.assignments[0].role).toBe(WorkRole.CAIXA);
-    });
-
-    it("should throw if operator is already assigned to the same catalog and role", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival de Inverno",
-        date: new Date()
-      });
-
-      const catalog = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
-
-      const operatorId = Id.generate();
-      operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
-
-      const result = () =>
-        operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
-
-      expect(result).toThrow("Operator already assigned to this catalog with this role");
-    });
-
-    it("should throw if catalog does not exist", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival de Inverno",
-        date: new Date()
-      });
-
-      const invalidCatalogId = Id.generate();
-      const operatorId = Id.generate();
-
-      const result = () =>
-        operation.assignOperator(operatorId, invalidCatalogId, WorkRole.CAIXA);
-
-      expect(result).toThrow("Catalog not found");
-    });
+    expect(() => operation.addSeller(sellerId)).toThrow(
+      "Seller already added to this operation"
+    );
   });
 
-  describe("Sales registration", () => {
-    it("should register a sale successfully when the operator has the right permission", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival",
-        date: new Date(),
-        status: OperationStatus.ACTIVE
-      });
+  it("should throw error when removing a seller that does not exist", () => {
+    const sellerId = Id.generate();
+    const operation = OperationBuilder.create().build();
 
-      const catalog = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
+    expect(() => operation.removeSeller(sellerId)).toThrow(
+      "Seller not found in this operation"
+    );
+  });
 
-      const item = operation.addCatalogItem(catalog.id, {
-        id: Id.generate(),
-        name: "Cerveja",
-        category: "Bebida",
-        price: Price.fromNumber(10, "BRL")
-      });
+  it("should activate operation", () => {
+    const operation = OperationBuilder.create().build();
 
-      const operatorId = Id.generate();
-      operation.assignOperator(operatorId, catalog.id, WorkRole.CAIXA);
+    operation.activate();
 
-      const sale = operation.registerSale(operatorId, catalog.id, [
-        { itemId: item.id, quantity: 2 }
-      ]);
-
-      expect(sale).toBeInstanceOf(Sale);
-      expect(sale.total).toBe(20);
-    });
-
-    it("should not register a sale if the operator doesn't have the right permission", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival",
-        date: new Date(),
-        status: OperationStatus.ACTIVE
-      });
-
-      const catalog = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
-
-      const item = operation.addCatalogItem(catalog.id, {
-        id: Id.generate(),
-        name: "Cerveja",
-        category: "Bebida",
-        price: Price.fromNumber(10, "BRL")
-      });
-
-      const operatorId = Id.generate();
-
-      const result = () => operation.registerSale(operatorId, catalog.id, [
-        { itemId: item.id, quantity: 1 }
-      ]);
-
-      expect(result).toThrow("Operator not assigned to this catalog");
-    });
-
-    it("should not allow an operator assigned to one catalog to register sales from another catalog", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival",
-        date: new Date(),
-        status: OperationStatus.ACTIVE
-      });
-
-      const catalog1 = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
-
-      const catalog2 = operation.createCatalog({
-        id: Id.generate(),
-        name: "Camarote",
-        type: CatalogType.CAMAROTE
-      });
-
-      const itemCamarote = operation.addCatalogItem(catalog2.id, {
-        id: Id.generate(),
-        name: "Whisky",
-        category: "Bebida",
-        price: Price.fromNumber(50, "BRL")
-      });
-
-      const operatorId = Id.generate();
-      operation.assignOperator(operatorId, catalog1.id, WorkRole.BAR);
-
-      const result = () => operation.registerSale(operatorId, catalog2.id, [
-        { itemId: itemCamarote.id, quantity: 1 }
-      ]);
-
-      expect(result).toThrow("Operator not assigned to this catalog");
-    });
-
-    it("should not register a sale if the operation is not active", () => {
-      const operation = Operation.create({
-        sellerId: Id.generate(),
-        name: "Festival",
-        date: new Date(),
-        status: OperationStatus.PLANNED
-      });
-
-      const catalog = operation.createCatalog({
-        id: Id.generate(),
-        name: "Pista",
-        type: CatalogType.PISTA
-      });
-
-      const item = operation.addCatalogItem(catalog.id, {
-        id: Id.generate(),
-        name: "Cerveja",
-        category: "Bebida",
-        price: Price.fromNumber(10, "BRL")
-      });
-
-      const operatorId = Id.generate();
-      operation.assignOperator(operatorId, catalog.id, WorkRole.BAR);
-
-      const result = () => operation.registerSale(operatorId, catalog.id, [
-        { itemId: item.id, quantity: 1 }
-      ])
-
-      expect(result).toThrow("Operation is not active");
-    });
+    expect(operation.status).toBe(OperationStatus.ACTIVE);
   });
 });

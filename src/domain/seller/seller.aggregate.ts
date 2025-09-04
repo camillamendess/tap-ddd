@@ -7,19 +7,18 @@ import { CreateOperatorInput, Operator } from "./entities/operator.entity";
 import { Sale } from "../sale/sale.aggregate";
 import { WorkAssignment, WorkRole } from "./value-objects/assignment.value-object";
 import { SaleItem } from "../sale/value-objects/sale-item.value-object";
-
-// TODO - CFP pode ser um value-object
+import { Cpf } from "../common/value-objects/cpf.value-object";
 
 export class Seller extends Aggregate {
   constructor(
     readonly id: Id,
     private _operationId: Id,
     private _name: string,
-    private _cpf: string,
+    private _cpf: Cpf,
     private _operators: Operator[] = [],
     private _catalogs: Catalog[] = [],
     private _assignments: WorkAssignment[] = [],
-    private _sales: Sale[] = []
+    private _sales: Id[] = []
   ) {
     super();
   }
@@ -41,14 +40,6 @@ export class Seller extends Aggregate {
 
     if (!this._name || this._name.trim() === "") {
       throw new Error("Name is required");
-    }
-
-    if (!this._cpf || this._cpf.trim() === "") {
-      throw new Error("Cpf is required");
-    }
-
-    if (this._cpf.trim().length < 11) {
-      throw new Error("Cpf must be a string of 11 digits");
     }
   }
 
@@ -175,13 +166,28 @@ export class Seller extends Aggregate {
 
     // Cria a venda
     const sale = Sale.create({
+      operationId: this._operationId,
       operatorId,
+      sellerId: this.id,
       catalogId,
       items: saleItems,
     });
 
-    this._sales.push(sale);
+    this._sales.push(sale.id);
     return sale;
+  }
+
+  toJSON() {
+    return {
+      id: this.id.toString(),
+      operationId: this._operationId.toString(),
+      name: this._name,
+      cpf: this._cpf.toString(),
+      operators: this._operators.map(op => op.toString()),
+      catalogs: this._catalogs.map(c => c.toString()),
+      assignments: this._assignments.map(a => a.toString()),
+      sales: this._sales.map(s => s.toString())
+    };
   }
 
   get operationId(): Id {
@@ -192,7 +198,7 @@ export class Seller extends Aggregate {
     return this._name;
   }
 
-  get cpf(): string {
+  get cpf(): Cpf {
     return this._cpf;
   }
 
@@ -208,16 +214,16 @@ export class Seller extends Aggregate {
     return this._assignments;
   }
 
-  get sales(): ReadonlyArray<Sale> {
+  get sales(): ReadonlyArray<Id> {
     return this._sales;
   }
 
   // TODO - Adicionar toJSON() e fromJSON()
 }
 
-interface CreateSellerInput {
+export interface CreateSellerInput {
   id?: Id;
   operationId: Id;
   name: string;
-  cpf: string;
+  cpf: Cpf;
 }

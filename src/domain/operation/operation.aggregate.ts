@@ -68,6 +68,16 @@ export class Operation extends Aggregate {
     this._status = OperationStatus.ACTIVE;
   }
 
+  toJSON() {
+    return {
+      id: this.id.toString(),
+      name: this._name,
+      date: this._date,
+      status: this._status,
+      sellers: this._sellers.map(s => s.toString())
+    };
+  }
+
   get name(): string {
     return this._name;
   }
