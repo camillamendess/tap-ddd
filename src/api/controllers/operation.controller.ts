@@ -1,20 +1,23 @@
 import { Request, Response } from "express";
 import { OperationService } from "../../application/operation/operation.service";
-import { InMemoryOperationRepository } from "../../infrastructure/db/operation.db.in-memory";
-import { InMemorySellerRepository } from "../../infrastructure/db/seller.db.in-memory";
+import { InMemoryOperationRepository } from "../../infrastructure/repository-in-memory/operation.db.in-memory";
+import { InMemorySellerRepository } from "../../infrastructure/repository-in-memory/seller.db.in-memory";
+import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
+import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
 
 export class OperationController {
-  private operetionService: OperationService;
+  private operationService: OperationService;
 
-  constructor() {
-    const operationRepositoryInMemory = new InMemoryOperationRepository();
-    const sellerRepositoryInMemory = new InMemorySellerRepository();
-    this.operetionService = new OperationService(operationRepositoryInMemory, sellerRepositoryInMemory);
+  constructor(
+    operationRepository: OperationRepository,
+    sellerRepository: SellerRepository
+  ) {
+    this.operationService = new OperationService(operationRepository, sellerRepository);
   }
 
   async createOperation(req: Request, res: Response) {
     try {
-      const operation = await this.operetionService.createOperation(req.body);
+      const operation = await this.operationService.createOperation(req.body);
       res.status(201).json(operation.toJSON());
     } catch (err: any) {
       res.status(400).json({ error: err.message });
@@ -23,7 +26,7 @@ export class OperationController {
 
   async addSeller(req: Request, res: Response) {
     try {
-      const seller = await this.operetionService.addSeller(req.body);
+      const seller = await this.operationService.addSeller(req.body);
       res.status(201).json(seller.toJSON());
     } catch (err: any) {
       res.status(400).json({ error: err.message });

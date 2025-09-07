@@ -1,18 +1,19 @@
 import { Request, Response } from "express";
 import { SaleService } from "../../application/sale/sale.service";
-import { InMemorySellerRepository } from "../../infrastructure/db/seller.db.in-memory";
-import { InMemorySaleRepository } from "../../infrastructure/db/sale.db.in-memory";
-import { InMemoryOperationRepository } from "../../infrastructure/db/operation.db.in-memory";
+import { SaleRepository } from "../../domain/sale/repositories/sale.repository.interface";
+import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
+import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { SaleItem } from "../../domain/sale/value-objects/sale-item.value-object";
 
 export class SaleController {
   private service: SaleService;
 
-  constructor() {
-    const sellerRepository = new InMemorySellerRepository();
-    const saleRepository = new InMemorySaleRepository();
-    const operationRepository = new InMemoryOperationRepository();
+  constructor(
+    sellerRepository: SellerRepository,
+    saleRepository: SaleRepository,
+    operationRepository: OperationRepository
+  ) {
     this.service = new SaleService(sellerRepository, saleRepository, operationRepository);
   }
 

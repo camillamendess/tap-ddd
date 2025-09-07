@@ -1,9 +1,9 @@
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { CreateOperationInput, Operation } from "../../domain/operation/operation.aggregate";
-import { OperationRepository } from "../../infrastructure/repositories/operation.repository.interface";
+import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
 import { CreateCatalogInput } from "../../domain/seller/entities/catalog.entity";
 import { CreateOperatorInput } from "../../domain/seller/entities/operator.entity";
-import { SellerRepository } from "../../infrastructure/repositories/seller.repository.interface";
+import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
 import { CreateSellerInput, Seller } from "../../domain/seller/seller.aggregate";
 import { WorkRole } from "../../domain/seller/value-objects/assignment.value-object";
 

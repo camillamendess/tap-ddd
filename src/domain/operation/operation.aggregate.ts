@@ -57,11 +57,11 @@ export class Operation extends Aggregate {
   }
 
   removeSeller(sellerId: Id) {
-    const index = this._sellers.findIndex(id => id.equals(sellerId)); // findIndex percorre o array procurando o índice do seller cujo id é igual ao sellerId passado, retorna o indice.
+    const index = this._sellers.findIndex(id => id.equals(sellerId));
     if (index === -1) {
       throw new Error("Seller not found in this operation");
     }
-    this._sellers.splice(index, 1); // splice remove 1 elemento do array _sellers na posição index.
+    this._sellers.splice(index, 1);
   }
 
   activate() {

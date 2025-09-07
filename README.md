@@ -86,5 +86,4 @@ Salvar via SaleRepository
 - OperationService (cria operação, adiciona/remove sellers; delega ao Seller criação de operador e catálogo).
 - SaleService (orquestra a venda: valida vínculos e permissões entre agregados; cria Sale; persiste via SaleRepository; opcional: gera tickets).
 - Repositórios (in-memory): OperationRepository, SellerRepository, SaleRepository.
-
 - Refatoração dos testes criados anteriormente e criação dos novos.

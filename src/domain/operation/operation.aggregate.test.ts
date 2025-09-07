@@ -2,7 +2,7 @@ import { OperationBuilder } from "../../tests/builders/operation.builder";
 import { Id } from "../common/value-objects/id.value-object";
 import { OperationStatus } from "./operation.aggregate";
 
-describe("Operation (with builder)", () => {
+describe("Operation", () => {
   it("should create operation with defaults", () => {
     const operation = OperationBuilder.create().build();
 

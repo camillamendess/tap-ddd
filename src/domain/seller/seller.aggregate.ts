@@ -131,11 +131,11 @@ export class Seller extends Aggregate {
       id: this.id.toString(),
       operationId: this._operationId.toString(),
       name: this._name,
-      cpf: this._cpf,
-      operators: this._operators,
-      catalogs: this._catalogs,
-      assignments: this._assignments,
-      sales: this._sales
+      cpf: this._cpf.toString(),
+      operators: this._operators.map(op => op.toString()),
+      catalogs: this._catalogs.map(c => c.toString()),
+      assignments: this._assignments.map(a => a.toString()),
+      sales: this._sales.map(s => s.toString())
     };
   }
 
@@ -167,7 +167,7 @@ export class Seller extends Aggregate {
     return this._sales;
   }
 
-  // TODO - Adicionar toJSON() e fromJSON()
+  // TODO - Adicionar fromJSON()
 }
 
 export interface CreateSellerInput {

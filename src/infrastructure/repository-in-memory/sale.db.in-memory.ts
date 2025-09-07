@@ -1,5 +1,5 @@
 import { Id } from "../../domain/common/value-objects/id.value-object";
-import { SaleRepository } from "../repositories/sale.repository.interface";
+import { SaleRepository } from "../../domain/sale/repositories/sale.repository.interface";
 import { Sale } from "../../domain/sale/sale.aggregate";
 
 export class InMemorySaleRepository implements SaleRepository {

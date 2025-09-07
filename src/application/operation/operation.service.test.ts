@@ -1,13 +1,12 @@
 import { OperationService } from "./operation.service";
-import { WorkRole } from "../../domain/seller/value-objects/assignment.value-object";
 import { OperationBuilder } from "../../tests/builders/operation.builder";
 import { SellerBuilder } from "../../tests/builders/seller.builder";
-import { InMemoryOperationRepository } from "../../infrastructure/db/operation.db.in-memory";
-import { InMemorySellerRepository } from "../../infrastructure/db/seller.db.in-memory";
+import { InMemoryOperationRepository } from "../../infrastructure/repository-in-memory/operation.db.in-memory";
+import { InMemorySellerRepository } from "../../infrastructure/repository-in-memory/seller.db.in-memory";
 import { Cpf } from "../../domain/common/value-objects/cpf.value-object";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 
-describe("OperationService (with builders)", () => {
+describe("OperationService", () => {
   let service: OperationService;
   let operationRepository: InMemoryOperationRepository;
   let sellerRepository: InMemorySellerRepository;
