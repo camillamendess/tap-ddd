@@ -2,7 +2,7 @@ import { Id } from "../../domain/common/value-objects/id.value-object";
 import { SaleRepository } from "../../domain/sale/repositories/sale.repository.interface";
 import { Sale } from "../../domain/sale/sale.aggregate";
 
-export class InMemorySaleRepository implements SaleRepository {
+export class PrismaSaleRepository implements SaleRepository {
   private store = new Map<string, Sale>();
 
   async findById(id: Id): Promise<Sale | null> {
@@ -13,6 +13,8 @@ export class InMemorySaleRepository implements SaleRepository {
     return sale.id;
   }
   async findByOperation(operationId: Id): Promise<Sale[]> {
-    return [...this.store.values()].filter(s => s.operationId.equals(operationId));
+    return [...this.store.values()].filter((s) =>
+      s.operationId.equals(operationId)
+    );
   }
 }

@@ -1,89 +1,92 @@
-### Entendimento da primeira parte da fase 2
+### Projeto – Tap DDD
 
-- Operation não tem mais um único Seller, mas uma coleção de Sellers.
-- Operator agora precisa estar vinculado explicitamente a um Seller.
-- Catalog também está vinculado a um Seller.
-- Sale se liga a um Catalog → que se liga a um Seller.
+Projeto que visa o estudo de DDD (Domain-Driven Design), usando o Nest.js como framework principal, Prisma ORM e PostgreSQL como base de dados.
 
-### Alterações de Agregados
+O objetivo é estruturar o sistema de forma modular, isolando o domínio da aplicação e permitindo escalar e manter o código com clareza.
 
-#### Agregado Seller
+### Agregados
 
-- Continua sendo dono de Operadores, Catálogos (com seus produtos), mas não está mais no topo da Operation; ele está dentro de uma Operation como um elemento da lista de Sellers.
+#### Operation Aggregate
 
-- Agora Catalog e Operator são entidades do agregado Seller, não do Operation.
+- Agora mantém uma coleção de Sellers (sellers: SellerId[]).
+- Gerencia Sellers, datas, status e ciclo de vida da operação.
 
-- Agora cada Seller precisa saber em qual Operation ele atua (um OperationId).
+#### Seller Aggregate
 
-- O Seller não pode ter operadores ou catálogos que pertençam a outro seller.
+- Dono de Operators e Catalogs.
+- Cada Seller sabe em qual Operation atua (operationId).
+- O Seller não pode conter entidades que pertençam a outro seller (garantia de integridade no domínio).
 
-#### Agregador Operation
+#### Outros Vínculos
 
-Ele não é mais responsável por criar vendas nem por validar venda.
-Mantém apenas responsabilidades relacionadas a gerenciar Sellers, datas, status do evento, etc.
+- Operator → vinculado a um Seller.
+- Catalog → vinculado a um Seller.
 
-```class Operation {
-private sellers: SellerId[]; // lista de Sellers vinculados à operação
+#### Sale Aggregate
 
-addSeller(seller: Seller) { ... }
-removeSeller(sellerId: SellerId) { ... }
- }
-```
-
-### Entendimento da segunda parte da fase 2
-
-#### Mudanças no Domínio
-
-Sale passa a ser Aggregate Root de verdade (não é mais uma entidade interna de Operation).
-
-Sale precisa guardar todos os dados relevantes para ser independente. Isso significa que o agregado Sale vai poder ser salvo, consultado e manipulado sem precisar carregar Operation inteiro.
-
-Ele gerencia seus Tickets, mas nada de fora do agregado manipula os tickets diretamente.
-
-Tickets são entidades dentro do agregado Sale → só podem ser criados ou alterados através da Sale.
-
-SaleItem continua sendo Value Object interna do Ticket.
+- Registra vendas.
+- Gerencia internamente seus Tickets.
+- Nenhum componente externo pode manipular os tickets diretamente.
+- SaleItem é um Value Object interno ao Ticket.
 
 #### Introdução da Camada de Application Services
 
-Essa camada fica acima do domínio e fora dos Aggregates.
+Os Application Services coordenam a comunicação entre agregados, aplicam validações cruzadas e persistem as entidades via repositórios.
 
-Função dela:
-
-- Coordenar interações entre múltiplos agregados.
-- Executar regras de orquestração (permissões, checagem de vínculos, etc).
-- Delegar regras de negócio puras para os agregados.
-
-##### Novos services:
-
-- OperationService
+#### OperationService
 
 Responsável por:
-Criar operação
-Adicionar/remover Sellers
-Delegar para Seller a criação de catálogos e operadores
 
-- SaleService
+- Criar uma nova Operation.
+- Adicionar ou remover Sellers.
+- Delegar ao Seller a criação de Catálogos e Operadores.
+
+#### SaleService
 
 Responsável por:
-Receber uma requisição de venda (ex.: operatorId, catalogId, lista de itens)
-Validar:
-operator pertence ao seller dono do catalog
-seller pertence à operation
-Criar um Sale usando o aggregate Sale.create(...)
-Salvar via SaleRepository
 
-### Entendimento geral da Arquitetura
+- Receber uma requisição de venda (operatorId, catalogId, itens, etc).
+- Validar os vínculos:
+  - O operator pertence ao seller dono do catalog.
+  - O seller pertence à operation.
+- Criar e salvar a Sale usando o SaleRepository.
+- (Opcional) Gerar tickets.
 
-##### Aggregates (Domínio):
+### Camada de Infraestrutura
 
-- Operation (gerencia sellers, status, datas — nenhuma lógica de venda).
-- Seller (dono de Operators, Catalogs, assignments).
-- Sale (aggregate root independente; guarda refs: operationId, sellerId, catalogId, operatorId, items, total, createdAt; opcional: tickets).
+#### Prisma ORM e PostgreSQL
 
-##### Application Services:
+Responsável por persistir e consultar os agregados no PostgreSQL. Cada repositório implementa uma interface de domínio (exemplo: OperationRepository) e é registrado como provider:
 
-- OperationService (cria operação, adiciona/remove sellers; delega ao Seller criação de operador e catálogo).
-- SaleService (orquestra a venda: valida vínculos e permissões entre agregados; cria Sale; persiste via SaleRepository; opcional: gera tickets).
-- Repositórios (in-memory): OperationRepository, SellerRepository, SaleRepository.
-- Refatoração dos testes criados anteriormente e criação dos novos.
+```
+@Module({
+  providers: [
+    PrismaService,
+    {
+      provide: OperationRepository,
+      useClass: PrismaOperationRepository,
+    },
+  ],
+})
+export class AppModule {}
+```
+
+### Camada de Interface (HTTP)
+
+Os Controllers recebem requisições HTTP, validam os dados e convertem para DTOs de aplicação. Exemplo usando Nest.js:
+
+```
+@Controller("operations")
+export class OperationController {
+  constructor(private readonly operationService: OperationService) {}
+
+  @Post()
+  async createOperation(@Body() body: CreateOperationInputBody) {
+    return await this.operationService.createOperation({
+      name: body.name,
+      date: new Date(body.date),
+      status: body.status,
+    });
+  }
+}
+```

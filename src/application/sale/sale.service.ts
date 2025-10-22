@@ -43,21 +43,7 @@ export class SaleService {
       throw new Error("Catalog does not belong to seller");
     }
 
-    // Verifica vínculo operador ↔ catálogo
-    interface Assignment {
-      operatorId: Id;
-      catalogId: Id;
-      role: WorkRole;
-    }
-
-    const hasAssignment: boolean = (seller.assignments as Assignment[]).some((a: Assignment) =>
-      a.operatorId.equals(operatorId) &&
-      a.catalogId.equals(catalogId) &&
-      a.role === WorkRole.CAIXA
-    );
-    if (!hasAssignment) throw new Error("Operator not assigned to this catalog");
-
-    // criar Sale como aggregate root
+    // criar Sale 
     const sale = Sale.create({
       operationId,
       sellerId,

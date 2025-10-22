@@ -1,19 +1,19 @@
 import { OperationService } from "./operation.service";
 import { OperationBuilder } from "../../tests/builders/operation.builder";
 import { SellerBuilder } from "../../tests/builders/seller.builder";
-import { InMemoryOperationRepository } from "../../infrastructure/repository-in-memory/operation.db.in-memory";
-import { InMemorySellerRepository } from "../../infrastructure/repository-in-memory/seller.db.in-memory";
+import { PrismaOperationRepository } from "../../infrastructure/repositories/prisma-operation.repository";
+import { PrismaSellerRepository } from "../../infrastructure/repositories/prisma-seller.repository";
 import { Cpf } from "../../domain/common/value-objects/cpf.value-object";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 
 describe("OperationService", () => {
   let service: OperationService;
-  let operationRepository: InMemoryOperationRepository;
-  let sellerRepository: InMemorySellerRepository;
+  let operationRepository: PrismaOperationRepository;
+  let sellerRepository: PrismaSellerRepository;
 
   beforeEach(() => {
-    operationRepository = new InMemoryOperationRepository();
-    sellerRepository = new InMemorySellerRepository();
+    operationRepository = new PrismaOperationRepository();
+    sellerRepository = new PrismaSellerRepository();
     service = new OperationService(operationRepository, sellerRepository);
   });
 
@@ -29,7 +29,9 @@ describe("OperationService", () => {
   });
 
   it("should add seller to operation", async () => {
-    const operation = OperationBuilder.create().withName("Festa Junina").build();
+    const operation = OperationBuilder.create()
+      .withName("Festa Junina")
+      .build();
     await operationRepository.save(operation);
 
     const seller = await service.addSeller({
@@ -40,7 +42,9 @@ describe("OperationService", () => {
 
     expect(seller.name).toBe("Seller A");
     const updatedOperation = await operationRepository.findById(operation.id);
-    expect(updatedOperation?.sellerIds.some(id => id.equals(seller.id))).toBe(true);
+    expect(updatedOperation?.sellerIds.some((id) => id.equals(seller.id))).toBe(
+      true
+    );
   });
 
   it("should remove seller from operation", async () => {
