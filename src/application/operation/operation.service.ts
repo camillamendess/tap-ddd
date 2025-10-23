@@ -1,23 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import {
-  CreateOperationInput,
   Operation,
   OperationStatus,
 } from "../../domain/operation/operation.aggregate";
 import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
-import { CreateCatalogInput } from "../../domain/seller/entities/catalog.entity";
-import { CreateOperatorInput } from "../../domain/seller/entities/operator.entity";
 import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
-import {
-  CreateSellerInput,
-  Seller,
-} from "../../domain/seller/seller.aggregate";
-import { WorkRole } from "../../domain/seller/value-objects/assignment.value-object";
 import {
   CreateOperationInputDTO,
   CreateOperationOutputDTO,
+  AddSellerInputDTO,
+  AddSellerOutputDTO,
+  RemoveSellerInputDTO,
+  RemoveSellerOutputDTO,
+  FindOperationOutputDTO,
 } from "./dtos/operation-service.dto";
+import { Cpf } from "../../domain/common/value-objects/cpf.value-object";
+import { Seller } from "../../domain/seller/seller.aggregate";
 
 @Injectable()
 export class OperationService {
@@ -25,8 +24,6 @@ export class OperationService {
     private readonly operationRepository: OperationRepository,
     private readonly sellerRepository: SellerRepository
   ) {}
-
-  // OPERATION
 
   async createOperation(
     dto: CreateOperationInputDTO
@@ -37,30 +34,70 @@ export class OperationService {
       date: new Date(dto.date),
       status: dto.status as OperationStatus,
     });
+
     await this.operationRepository.save(operation);
+
+    return {
+      id: operation.id.toString(),
+      name: operation.name,
+      date: operation.date,
+      status: operation.status,
+    };
+  }
+
+  async getAllOperations(): Promise<CreateOperationOutputDTO[]> {
+    const operations = await this.operationRepository.findAll();
+    return operations.map((op) => op.toJSON());
+  }
+
+  async findOperationById(
+    operationId: string
+  ): Promise<FindOperationOutputDTO> {
+    const operation = await this.operationRepository.findById(
+      new Id(operationId)
+    );
+    if (!operation) {
+      throw new NotFoundException("Operation not found");
+    }
+
     return operation.toJSON();
   }
 
-  async findOperationById(id: string) {
-    const operation = await this.operationRepository.findById(new Id(id));
-    if (!operation) throw new Error("Operation not found");
-    return operation;
-  }
+  async activateOperation(
+    operationId: string
+  ): Promise<CreateOperationOutputDTO> {
+    const operation = await this.operationRepository.findById(
+      new Id(operationId)
+    );
+    if (!operation) {
+      throw new NotFoundException("Operation not found");
+    }
 
-  async activateOperation(id: string) {
-    const operation = await this.findOperationById(id);
     operation.activate();
     await this.operationRepository.save(operation);
-    return operation.toJSON();
+
+    return {
+      id: operation.id.toString(),
+      name: operation.name,
+      date: operation.date,
+      status: operation.status,
+    };
   }
 
-  // SELLER (parte do agregado)
-
-  async addSeller(input: CreateSellerInput) {
-    const operation = await this.findOperationById(
-      input.operationId.toString()
+  async addSeller(input: AddSellerInputDTO): Promise<AddSellerOutputDTO> {
+    const operation = await this.operationRepository.findById(
+      new Id(input.operationId)
     );
-    const seller = Seller.create(input);
+    if (!operation) {
+      throw new NotFoundException("Operation not found");
+    }
+
+    const seller = Seller.create({
+      id: Id.generate(),
+      operationId: new Id(input.operationId),
+      name: input.name,
+      cpf: new Cpf(input.cpf),
+    });
 
     operation.addSeller(seller.id);
 
@@ -73,58 +110,24 @@ export class OperationService {
     };
   }
 
-  async removeSeller(operationId: string, sellerId: string) {
-    const operation = await this.findOperationById(operationId);
+  async removeSeller(
+    input: RemoveSellerInputDTO
+  ): Promise<RemoveSellerOutputDTO> {
+    const operation = await this.operationRepository.findById(
+      new Id(input.operationId)
+    );
+    if (!operation) {
+      throw new NotFoundException("Operation not found");
+    }
 
-    operation.removeSeller(new Id(sellerId));
-    await this.sellerRepository.remove(new Id(sellerId));
+    operation.removeSeller(new Id(input.sellerId));
+    await this.sellerRepository.remove(new Id(input.sellerId));
     await this.operationRepository.save(operation);
 
-    return operation.toJSON();
-  }
-
-  // OPERATOR & CATALOG (parte do agregado vendedor) -> vai para seller.service.ts depois
-
-  async addOperatorToSeller(input: CreateOperatorInput) {
-    const seller = await this.sellerRepository.findById(input.sellerId);
-    if (!seller) throw new Error("Seller not found");
-
-    const operator = seller.addOperator(input);
-    await this.sellerRepository.save(seller);
-
-    return operator;
-  }
-
-  async createCatalogForSeller(
-    sellerId: Id,
-    input: Omit<CreateCatalogInput, "sellerId">
-  ) {
-    const seller = await this.sellerRepository.findById(sellerId);
-    if (!seller) throw new Error("Seller not found");
-
-    const catalog = seller.createCatalog(input);
-    await this.sellerRepository.save(seller);
-
-    return catalog;
-  }
-
-  async assignOperatorToCatalog(
-    sellerId: Id,
-    operatorId: Id,
-    catalogId: Id,
-    role: WorkRole
-  ) {
-    const seller = await this.sellerRepository.findById(sellerId);
-    if (!seller) throw new Error("Seller not found");
-
-    const assignment = seller.assignOperatorToCatalog(
-      operatorId,
-      catalogId,
-      role
-    );
-
-    await this.sellerRepository.save(seller);
-
-    return assignment;
+    return {
+      operationId: input.operationId,
+      removedSellerId: input.sellerId,
+      updatedOperation: operation.toJSON(),
+    };
   }
 }

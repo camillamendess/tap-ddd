@@ -3,79 +3,101 @@ import { OperationBuilder } from "../../tests/builders/operation.builder";
 import { SellerBuilder } from "../../tests/builders/seller.builder";
 import { PrismaOperationRepository } from "../../infrastructure/repositories/prisma-operation.repository";
 import { PrismaSellerRepository } from "../../infrastructure/repositories/prisma-seller.repository";
-import { Cpf } from "../../domain/common/value-objects/cpf.value-object";
 import { Id } from "../../domain/common/value-objects/id.value-object";
+import {
+  AddSellerInputDTO,
+  CreateOperationInputDTO,
+  RemoveSellerInputDTO,
+} from "./dtos/operation-service.dto";
+import { PrismaService } from "src/infrastructure/prisma.service";
+
+const prismaMock = {
+  operation: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+  },
+  seller: {
+    create: jest.fn(),
+    findUnique: jest.fn(),
+  },
+} as unknown as PrismaService;
 
 describe("OperationService", () => {
   let service: OperationService;
   let operationRepository: PrismaOperationRepository;
   let sellerRepository: PrismaSellerRepository;
 
-  beforeEach(() => {
-    operationRepository = new PrismaOperationRepository();
-    sellerRepository = new PrismaSellerRepository();
+  beforeAll(() => {
+    operationRepository = new PrismaOperationRepository(prismaMock);
+    sellerRepository = new PrismaSellerRepository(prismaMock);
     service = new OperationService(operationRepository, sellerRepository);
   });
 
   it("should create an operation", async () => {
-    const operation = await service.createOperation({
-      name: "Festival",
+    const input: CreateOperationInputDTO = {
+      name: "Festival de Inverno",
       date: new Date("2025-09-01"),
-    });
+      status: "ACTIVE",
+    };
 
-    expect(operation.name).toBe("Festival");
-    const stored = await operationRepository.findById(operation.id);
+    const operation = await service.createOperation(input);
+
+    expect(operation).toHaveProperty("id");
+    expect(operation.name).toBe("Festival de Inverno");
+
+    const stored = await operationRepository.findById(new Id(operation.id));
     expect(stored).not.toBeNull();
   });
 
-  it("should add seller to operation", async () => {
+  it("should add a seller to an existing operation", async () => {
     const operation = OperationBuilder.create()
       .withName("Festa Junina")
       .build();
     await operationRepository.save(operation);
 
-    const seller = await service.addSeller({
-      name: "Seller A",
-      operationId: operation.id,
-      cpf: Cpf.create("12345678901"),
-    });
+    const sellerInput: AddSellerInputDTO = {
+      name: "Camilla Seller",
+      cpf: "12345678901",
+      operationId: operation.id.toString(),
+    };
 
-    expect(seller.name).toBe("Seller A");
+    const result = await service.addSeller(sellerInput);
+
+    expect(result.seller.name).toBe("Camilla Seller");
+    expect(result.operation.sellers).toContain(result.seller.id);
+
     const updatedOperation = await operationRepository.findById(operation.id);
-    expect(updatedOperation?.sellerIds.some((id) => id.equals(seller.id))).toBe(
-      true
-    );
+    expect(
+      updatedOperation?.sellerIds.some((id) =>
+        id.equals(new Id(result.seller.id))
+      )
+    ).toBe(true);
   });
 
-  it("should remove seller from operation", async () => {
-    const operation = OperationBuilder.create().build();
+  it("should remove a seller from an operation", async () => {
+    const operation = OperationBuilder.create()
+      .withName("Feira de Tecnologia")
+      .build();
     await operationRepository.save(operation);
 
-    const seller = SellerBuilder.create().withOperationId(operation.id).build();
+    const seller = SellerBuilder.create()
+      .withOperationId(operation.id)
+      .withCpf("98765432100")
+      .build();
     await sellerRepository.save(seller);
     operation.addSeller(seller.id);
     await operationRepository.save(operation);
 
-    await service.removeSeller(operation.id, seller.id);
+    const input: RemoveSellerInputDTO = {
+      operationId: operation.id.toString(),
+      sellerId: seller.id.toString(),
+    };
 
-    const updatedOperation = await operationRepository.findById(operation.id);
-    expect(updatedOperation?.sellerIds.length).toBe(0);
-    expect(await sellerRepository.findById(seller.id)).toBeNull();
-  });
+    const result = await service.removeSeller(input);
 
-  it("should add operator to seller", async () => {
-    const operation = OperationBuilder.create().build();
-    await operationRepository.save(operation);
+    expect(result.updatedOperation.sellers).toHaveLength(0);
 
-    const seller = SellerBuilder.create().withOperationId(operation.id).build();
-    await sellerRepository.save(seller);
-
-    const operator = await service.addOperatorToSeller({
-      id: Id.generate(),
-      sellerId: seller.id,
-      name: "Operador 1",
-    });
-
-    expect(operator.name).toBe("Operador 1");
+    const deletedSeller = await sellerRepository.findById(seller.id);
+    expect(deletedSeller).toBeNull();
   });
 });
