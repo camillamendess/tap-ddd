@@ -1,4 +1,9 @@
-import { IsString, IsDateString, IsOptional } from "class-validator";
+import {
+  IsString,
+  IsDateString,
+  IsOptional,
+  IsNotEmpty,
+} from "class-validator";
 
 export class CreateOperationInputBody {
   @IsString()
@@ -10,4 +15,14 @@ export class CreateOperationInputBody {
   @IsOptional()
   @IsString()
   status?: string;
+}
+
+export class AddSellerInputBody {
+  @IsString()
+  @IsNotEmpty()
+  name: string;
+
+  @IsString()
+  @IsNotEmpty()
+  cpf: string;
 }
