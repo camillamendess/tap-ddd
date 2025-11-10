@@ -3,8 +3,12 @@ import { Id } from "../../domain/common/value-objects/id.value-object";
 import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
 import { SaleRepository } from "../../domain/sale/repositories/sale.repository.interface";
 import { Sale } from "../../domain/sale/sale.aggregate";
-import { SaleItem } from "../../domain/sale/value-objects/sale-item.value-object";
 import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
+import {
+  FindSaleOutputDTO,
+  RegisterSaleInputDTO,
+  RegisterSaleOutputDTO,
+} from "./dtos/sale-service.dto";
 @Injectable()
 export class SaleService {
   constructor(
@@ -14,51 +18,65 @@ export class SaleService {
   ) {}
 
   async registerSale(
-    operationId: Id,
-    sellerId: Id,
-    operatorId: Id,
-    catalogId: Id,
-    orderId: Id,
-    items: SaleItem[]
-  ): Promise<Sale> {
-    // Operation deve existir e conter o seller
-    const operation = await this.operationRepository.findById(operationId);
+    input: RegisterSaleInputDTO
+  ): Promise<RegisterSaleOutputDTO> {
+    const operation = await this.operationRepository.findById(
+      new Id(input.operationId)
+    );
     if (!operation) throw new Error("Operation not found");
 
-    const sellerExists = operation.sellerIds.some((id) => id.equals(sellerId));
+    const sellerExists = operation.sellerIds.some((id) =>
+      id.equals(new Id(input.sellerId))
+    );
     if (!sellerExists) throw new Error("Seller does not belong to operation");
 
-    // Seller deve existir
-    const seller = await this.sellerRepository.findById(sellerId);
+    const seller = await this.sellerRepository.findById(new Id(input.sellerId));
     if (!seller) throw new Error("Seller not found");
 
-    // Verifica se o operador pertence ao seller
     const operatorExists: boolean = seller.operators.some((op: { id: Id }) =>
-      op.id.equals(operatorId)
+      op.id.equals(new Id(input.operatorId))
     );
     if (!operatorExists) {
       throw new Error("Operator does not belong to seller");
     }
 
-    // Verifica se o catálogo pertence ao seller
     const catalogExists: boolean = seller.catalogs.some((cat: { id: Id }) =>
-      cat.id.equals(catalogId)
+      cat.id.equals(new Id(input.catalogId))
     );
     if (!catalogExists) {
       throw new Error("Catalog does not belong to seller");
     }
 
-    // criar Sale
     const sale = Sale.create({
-      operationId,
-      sellerId,
-      catalogId,
-      operatorId,
-      orderId,
-      items,
+      operationId: new Id(input.operationId),
+      sellerId: new Id(input.sellerId),
+      operatorId: new Id(input.operatorId),
+      catalogId: new Id(input.catalogId),
+      orderId: new Id(input.orderId),
+      items: input.items as any,
     });
     await this.saleRepository.save(sale);
 
-    return sale;
+    return {
+      id: sale.id.toString(),
+      operationId: input.operationId,
+      sellerId: input.sellerId,
+      operatorId: input.operatorId,
+      catalogId: input.catalogId,
+      orderId: input.orderId,
+      items: input.items,
+      total: sale.total,
+      createdAt: sale.createdAt,
+    };
+  }
+
+  async findSales(): Promise<FindSaleOutputDTO[]> {
+    const sales = await this.saleRepository.findAll();
+    return sales.map((s) => s.toJSON());
+  }
+
+  async findSaleById(id: Id): Promise<FindSaleOutputDTO | null> {
+    const sale = await this.saleRepository.findById(id);
+    return sale ? sale.toJSON() : null;
   }
 }

@@ -1,28 +1,18 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { SaleService } from "src/application/sale/sale.service";
-import { RegisterSaleBodyDTO } from "./sale.body";
+import { Id } from "src/domain/common/value-objects/id.value-object";
 
 @Controller("sales")
 export class SaleController {
   constructor(private readonly saleService: SaleService) {}
 
-  @Post()
-  async registerSale(@Body() body: RegisterSaleBodyDTO) {
-    // const operationId = new Id(body.operationId);
-    // const sellerId = new Id(body.sellerId);
-    // const operatorId = new Id(body.operatorId);
-    // const catalogId = new Id(body.catalogId);
-    // const saleItems: SaleItem[] = body.items.map(
-    //   (item) =>
-    //     new SaleItem(new Id(item.id), item.name, item.quantity, item.price)
-    // );
-    // const sale = await this.saleService.registerSale(
-    //   operationId,
-    //   sellerId,
-    //   operatorId,
-    //   catalogId,
-    //   saleItems
-    // );
-    // return sale;
+  @Get()
+  async list() {
+    return this.saleService.findSales();
+  }
+
+  @Get(":id")
+  async findById(@Param("id") id: string) {
+    return this.saleService.findSaleById(new Id(id));
   }
 }

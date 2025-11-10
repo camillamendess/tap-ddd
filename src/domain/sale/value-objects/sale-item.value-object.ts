@@ -4,7 +4,7 @@ import { Price } from "./price.value-object";
 
 export class SaleItem implements ValueObject {
   constructor(
-    public readonly itemId: Id,
+    public readonly catalogItemId: Id,
     public readonly name: string,
     public readonly quantity: number,
     public readonly price: Price
@@ -14,7 +14,7 @@ export class SaleItem implements ValueObject {
 
   equals(other: SaleItem): boolean {
     return (
-      this.itemId.equals(other.itemId) &&
+      this.catalogItemId.equals(other.catalogItemId) &&
       this.name === other.name &&
       this.quantity === other.quantity &&
       this.price.equals(other.price)

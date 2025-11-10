@@ -58,6 +58,26 @@ export class Sale extends Aggregate {
       throw new Error("CreatedAt must be a valid date");
   }
 
+  toJSON() {
+    return {
+      id: this.id.toString(),
+      operationId: this.operationId.toString(),
+      sellerId: this.sellerId.toString(),
+      operatorId: this.operatorId.toString(),
+      catalogId: this.catalogId.toString(),
+      orderId: this.orderId.toString(),
+      items: this.items.map((item) => ({
+        id: item.catalogItemId.toString(),
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price.valueOf(),
+        total: item.total.valueOf(),
+      })),
+      total: this.total,
+      createdAt: this.createdAt,
+    };
+  }
+
   get operationId(): Id {
     return this._operationId;
   }
@@ -72,6 +92,10 @@ export class Sale extends Aggregate {
 
   get operatorId(): Id {
     return this._operatorId;
+  }
+
+  get orderId(): Id {
+    return this._orderId;
   }
 
   get items(): ReadonlyArray<SaleItem> {

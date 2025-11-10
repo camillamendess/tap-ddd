@@ -63,14 +63,13 @@ export class PrismaSaleRepository implements SaleRepository {
 
   async findAll(): Promise<Sale[]> {
     const records = await this.prisma.sale.findMany();
-
     return records.map((r) =>
       Sale.create({
         id: new Id(r.id),
         operationId: new Id(r.operationId),
         sellerId: new Id(r.sellerId),
-        catalogId: new Id(r.catalogId),
         operatorId: new Id(r.operatorId),
+        catalogId: new Id(r.catalogId),
         orderId: new Id(r.orderId),
         items: r.items as any,
       })
