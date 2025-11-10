@@ -19,6 +19,8 @@ model Operation {
   date    DateTime
   status  String
   sellers Seller[]
+  orders  Order[]
+  sales   Sale[]
 }
 
 model Seller {
@@ -29,6 +31,8 @@ model Seller {
   operationId String?
   operators   Operator[]
   catalogs    Catalog[]
+  orders      Order[]
+  sales       Sale[]
 }
 
 model Operator {
@@ -37,6 +41,8 @@ model Operator {
   seller         Seller           @relation(fields: [sellerId], references: [id])
   sellerId       String
   WorkAssignment WorkAssignment[]
+  orders         Order[]
+  sales          Sale[]
 }
 
 model Catalog {
@@ -47,6 +53,8 @@ model Catalog {
   sellerId       String
   items          CatalogItem[]
   WorkAssignment WorkAssignment[]
+  orders         Order[]
+  sales          Sale[]
 }
 
 model CatalogItem {
@@ -65,4 +73,47 @@ model WorkAssignment {
   catalog    Catalog  @relation(fields: [catalogId], references: [id])
   catalogId  String
   role       String
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Order {
+  id          String      @id @default(uuid())
+  operationId String
+  sellerId    String
+  catalogId   String
+  operatorId  String
+  items       Json // Lista de SaleItem (JSON)
+  total       Float
+  createdAt   DateTime    @default(now())
+  paidAt      DateTime?
+  status      OrderStatus @default(PENDING)
+
+  operation Operation @relation(fields: [operationId], references: [id])
+  seller    Seller    @relation(fields: [sellerId], references: [id])
+  catalog   Catalog   @relation(fields: [catalogId], references: [id])
+  operator  Operator  @relation(fields: [operatorId], references: [id])
+  sales     Sale[] // 1:N com Sale
+}
+
+model Sale {
+  id          String   @id @default(uuid())
+  operationId String
+  sellerId    String
+  catalogId   String
+  operatorId  String
+  orderId     String
+  items       Json // Lista de SaleItem (JSON)
+  total       Float
+  createdAt   DateTime @default(now())
+
+  operation Operation @relation(fields: [operationId], references: [id])
+  seller    Seller    @relation(fields: [sellerId], references: [id])
+  catalog   Catalog   @relation(fields: [catalogId], references: [id])
+  operator  Operator  @relation(fields: [operatorId], references: [id])
+  order     Order     @relation(fields: [orderId], references: [id])
 }
