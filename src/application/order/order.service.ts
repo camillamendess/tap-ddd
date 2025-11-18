@@ -8,6 +8,8 @@ import {
   CreateOrderInputDTO,
   CreateOrderOutputDTO,
 } from "./dtos/order-service.dto";
+import { SaleItemOutputDTO } from "../sale/dtos/sale-service.dto";
+import { SaleItem } from "src/domain/sale/value-objects/sale-item.value-object";
 
 @Injectable()
 export class OrderService {
@@ -46,14 +48,23 @@ export class OrderService {
 
     await this.orderRepository.save(order);
 
+    const eventItems: SaleItemOutputDTO[] = order.items.map(
+      (item: SaleItem) => ({
+        name: item.name,
+        price: item.price.valueOf(),
+        quantity: item.quantity,
+        total: item.total,
+      })
+    );
+
     this.eventBus.publish(
       new OrderPaidEvent(
-        order.id,
-        order["operationId"],
-        order["sellerId"],
-        order["operatorId"],
-        order["catalogId"],
-        [...order.items]
+        order.id.toString(),
+        order.operationId.toString(),
+        order.sellerId.toString(),
+        order.operatorId.toString(),
+        order.catalogId.toString(),
+        eventItems
       )
     );
   }

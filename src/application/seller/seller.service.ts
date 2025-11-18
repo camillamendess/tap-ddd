@@ -41,6 +41,16 @@ export class SellerService {
     };
   }
 
+  async getAllSellers(): Promise<CreateSellerOutputDTO[]> {
+    const sellers = await this.sellerRepository.findAll();
+    return sellers.map((seller) => ({
+      id: seller.id.toString(),
+      operationId: seller.operationId.toString(),
+      name: seller.name,
+      cpf: seller.cpf.toString(),
+    }));
+  }
+
   async getSellerById(id: string): Promise<Seller> {
     const seller = await this.sellerRepository.findById(new Id(id));
     if (!seller) throw new Error("Seller not found");
@@ -58,7 +68,7 @@ export class SellerService {
       name: input.name,
     });
 
-    await this.sellerRepository.save(seller);
+    await this.sellerRepository.addOperator(seller.id, operator);
 
     return {
       id: operator.id.toString(),
@@ -85,7 +95,7 @@ export class SellerService {
       type: input.type,
     });
 
-    await this.sellerRepository.save(seller);
+    await this.sellerRepository.createCatalog(seller.id, catalog);
 
     return {
       id: catalog.id.toString(),

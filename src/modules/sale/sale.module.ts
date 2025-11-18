@@ -7,10 +7,12 @@ import { SellerRepository } from "src/domain/seller/repositories/seller.reposito
 import { PrismaOperationRepository } from "src/infrastructure/repositories/prisma-operation.repository";
 import { PrismaSellerRepository } from "src/infrastructure/repositories/prisma-seller.repository";
 import { SaleRepository } from "src/domain/sale/repositories/sale.repository.interface";
+import { PrismaService } from "src/infrastructure/prisma.service";
 
 @Module({
   controllers: [SaleController],
   providers: [
+    PrismaService,
     SaleService,
     {
       provide: SaleRepository,

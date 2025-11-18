@@ -22,6 +22,18 @@ export class PrismaSellerRepository implements SellerRepository {
     return seller.id;
   }
 
+  async findAll(): Promise<Seller[]> {
+    const records = await this.prisma.seller.findMany();
+    return records.map((record) =>
+      Seller.create({
+        id: new Id(record.id),
+        operationId: new Id(record.operationId!),
+        name: record.name,
+        cpf: Cpf.create(record.cpf),
+      })
+    );
+  }
+
   async findById(id: Id): Promise<Seller | null> {
     const record = await this.prisma.seller.findUnique({
       where: { id: id.toString() },
@@ -48,5 +60,28 @@ export class PrismaSellerRepository implements SellerRepository {
     });
 
     return id;
+  }
+
+  async addOperator(sellerId: Id, operator: any): Promise<Id> {
+    await this.prisma.operator.create({
+      data: {
+        id: operator.id.toString(),
+        sellerId: sellerId.toString(),
+        name: operator.name,
+      },
+    });
+    return operator.id;
+  }
+
+  async createCatalog(sellerId: Id, catalog: any): Promise<Id> {
+    await this.prisma.catalog.create({
+      data: {
+        id: catalog.id.toString(),
+        sellerId: sellerId.toString(),
+        name: catalog.name,
+        type: catalog.type,
+      },
+    });
+    return catalog.id;
   }
 }

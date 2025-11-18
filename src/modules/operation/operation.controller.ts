@@ -18,7 +18,6 @@ export class OperationController {
 
   @Post()
   async createOperation(@Body() body: CreateOperationInputBody) {
-    // Mapeia o body (HTTP) → DTO da aplicação
     return await this.operationService.createOperation({
       name: body.name,
       date: new Date(body.date),

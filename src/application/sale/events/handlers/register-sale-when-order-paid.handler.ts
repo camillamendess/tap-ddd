@@ -9,14 +9,7 @@ export class RegisterSaleWhenOrderPaidHandler
   constructor(private readonly saleService: SaleService) {}
 
   async handle(event: OrderPaidEvent): Promise<void> {
-    await this.saleService.registerSale(
-      event.operationId,
-      event.sellerId,
-      event.operatorId,
-      event.catalogId,
-      event.orderId,
-      event.items
-    );
+    await this.saleService.registerSale(event);
     console.log(
       `[EVENT] Sale registrada após pagamento da order ${event.orderId.toString()}`
     );

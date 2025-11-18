@@ -73,6 +73,22 @@ export class Order extends Aggregate {
     this._status = OrderStatus.CANCELLED;
   }
 
+  get operationId() {
+    return this._operationId;
+  }
+
+  get sellerId() {
+    return this._sellerId;
+  }
+
+  get catalogId() {
+    return this._catalogId;
+  }
+
+  get operatorId() {
+    return this._operatorId;
+  }
+
   get status() {
     return this._status;
   }

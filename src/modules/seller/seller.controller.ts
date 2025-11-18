@@ -12,6 +12,11 @@ import { SellerService } from "src/application/seller/seller.service";
 export class SellerController {
   constructor(private readonly sellerService: SellerService) {}
 
+  @Get()
+  async getAllSellers() {
+    return await this.sellerService.getAllSellers();
+  }
+
   @Post()
   async createSeller(@Body() body: CreateSellerInputBody) {
     return await this.sellerService.createSeller({

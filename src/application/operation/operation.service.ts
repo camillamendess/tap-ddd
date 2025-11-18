@@ -102,7 +102,6 @@ export class OperationService {
     operation.addSeller(seller.id);
 
     await this.sellerRepository.save(seller);
-    await this.operationRepository.save(operation);
 
     return {
       operation: operation.toJSON(),
