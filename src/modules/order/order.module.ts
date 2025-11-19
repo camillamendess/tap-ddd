@@ -13,9 +13,11 @@ import { SaleRepository } from "src/domain/sale/repositories/sale.repository.int
 import { PrismaSaleRepository } from "src/infrastructure/repositories/prisma-sale.repository";
 import { PrismaOperationRepository } from "src/infrastructure/repositories/prisma-operation.repository";
 import { OperationRepository } from "src/domain/operation/repositories/operation.repository.interface";
+import { OrderController } from "./order.controller";
 
 @Module({
   imports: [CqrsModule, SaleModule],
+  controllers: [OrderController],
   providers: [
     PrismaService,
     OrderService,

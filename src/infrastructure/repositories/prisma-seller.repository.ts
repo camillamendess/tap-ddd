@@ -4,6 +4,12 @@ import { Seller } from "../../domain/seller/seller.aggregate";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { Cpf } from "../../domain/common/value-objects/cpf.value-object";
 import { PrismaService } from "../prisma.service";
+import {
+  Catalog,
+  CatalogType,
+} from "src/domain/seller/entities/catalog.entity";
+import { Operator } from "src/domain/seller/entities/operator.entity";
+import { CatalogItem } from "src/domain/seller/entities/catalog-item.entity";
 
 @Injectable()
 export class PrismaSellerRepository implements SellerRepository {
@@ -45,7 +51,6 @@ export class PrismaSellerRepository implements SellerRepository {
       throw new Error("Seller record missing operationId");
     }
 
-    // Reconstrói o aggregate e retorna
     return Seller.create({
       id: new Id(record.id),
       operationId: new Id(record.operationId),
@@ -62,7 +67,7 @@ export class PrismaSellerRepository implements SellerRepository {
     return id;
   }
 
-  async addOperator(sellerId: Id, operator: any): Promise<Id> {
+  async addOperator(sellerId: Id, operator: Operator): Promise<Operator> {
     await this.prisma.operator.create({
       data: {
         id: operator.id.toString(),
@@ -70,10 +75,10 @@ export class PrismaSellerRepository implements SellerRepository {
         name: operator.name,
       },
     });
-    return operator.id;
+    return operator;
   }
 
-  async createCatalog(sellerId: Id, catalog: any): Promise<Id> {
+  async createCatalog(sellerId: Id, catalog: Catalog): Promise<Catalog> {
     await this.prisma.catalog.create({
       data: {
         id: catalog.id.toString(),
@@ -82,6 +87,55 @@ export class PrismaSellerRepository implements SellerRepository {
         type: catalog.type,
       },
     });
-    return catalog.id;
+    return catalog;
+  }
+
+  async findCatalogById(sellerId: Id, catalogId: Id): Promise<Catalog | null> {
+    const record = await this.prisma.catalog.findUnique({
+      where: {
+        id: catalogId.toString(),
+        sellerId: sellerId.toString(),
+      },
+    });
+    if (!record) return null;
+
+    return Catalog.create({
+      id: new Id(record.id),
+      sellerId: new Id(record.sellerId),
+      name: record.name,
+      type: record.type as CatalogType,
+    });
+  }
+
+  async addCatalogItem(
+    sellerId: Id,
+    catalogId: Id,
+    item: CatalogItem
+  ): Promise<Catalog> {
+    await this.prisma.catalogItem.create({
+      data: {
+        catalogId: catalogId.toString(),
+        name: item.name,
+        price: item.price.valueOf(),
+        category: item.category,
+      },
+    });
+
+    const catalogRecord = await this.prisma.catalog.findUnique({
+      where: {
+        id: catalogId.toString(),
+        sellerId: sellerId.toString(),
+      },
+    });
+
+    if (!catalogRecord) {
+      throw new Error("Catalog not found");
+    }
+    return Catalog.create({
+      id: new Id(catalogRecord.id),
+      sellerId: new Id(catalogRecord.sellerId),
+      name: catalogRecord.name,
+      type: catalogRecord.type as CatalogType,
+    });
   }
 }

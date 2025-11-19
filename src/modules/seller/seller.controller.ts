@@ -61,6 +61,14 @@ export class SellerController {
     });
   }
 
+  @Get(":sellerId/catalogs/:catalogId")
+  async getCatalog(
+    @Param("sellerId") sellerId: string,
+    @Param("catalogId") catalogId: string
+  ) {
+    return this.sellerService.getCatalogById(sellerId, catalogId);
+  }
+
   @Post(":sellerId/catalogs/:catalogId/items")
   async addCatalogItem(
     @Param("sellerId") sellerId: string,

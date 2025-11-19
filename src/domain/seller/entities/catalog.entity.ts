@@ -8,24 +8,18 @@ export enum CatalogType {
 }
 
 export class Catalog implements Entity {
-  private _items: CatalogItem[] = [];
-
   constructor(
     readonly id: Id,
-    private sellerId: Id,
+    private _sellerId: Id,
     private _name: string,
-    private _type: string
-  ) { }
+    private _type: string,
+    private _items: CatalogItem[] = []
+  ) {}
 
   static create(input: CreateCatalogInput) {
     const id = input.id ?? Id.generate();
 
-    const catalog = new Catalog(
-      id,
-      input.sellerId,
-      input.name,
-      input.type
-    );
+    const catalog = new Catalog(id, input.sellerId, input.name, input.type);
 
     catalog.validate();
 
@@ -50,6 +44,20 @@ export class Catalog implements Entity {
     }
 
     this._items.push(item);
+  }
+
+  toJSON() {
+    return {
+      id: this.id.toString(),
+      sellerId: this._sellerId.toString(),
+      name: this._name,
+      type: this._type,
+      items: this._items.map((item) => item.toString()),
+    };
+  }
+
+  get sellerId(): Id {
+    return this._sellerId;
   }
 
   get name(): string {

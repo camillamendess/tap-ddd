@@ -33,22 +33,12 @@ export class SellerService {
 
     await this.sellerRepository.save(seller);
 
-    return {
-      id: seller.id.toString(),
-      operationId: seller.operationId.toString(),
-      name: seller.name,
-      cpf: seller.cpf.toString(),
-    };
+    return seller.toJSON();
   }
 
   async getAllSellers(): Promise<CreateSellerOutputDTO[]> {
     const sellers = await this.sellerRepository.findAll();
-    return sellers.map((seller) => ({
-      id: seller.id.toString(),
-      operationId: seller.operationId.toString(),
-      name: seller.name,
-      cpf: seller.cpf.toString(),
-    }));
+    return sellers.map((seller) => seller.toJSON());
   }
 
   async getSellerById(id: string): Promise<Seller> {
@@ -102,6 +92,15 @@ export class SellerService {
       type: catalog.type,
       name: catalog.name,
     };
+  }
+
+  async getCatalogById(sellerId: string, catalogId: string) {
+    const catalog = await this.sellerRepository.findCatalogById(
+      new Id(sellerId),
+      new Id(catalogId)
+    );
+    if (!catalog) throw new Error("Catalog not found");
+    return catalog.toJSON();
   }
 
   async addCatalogItem(
