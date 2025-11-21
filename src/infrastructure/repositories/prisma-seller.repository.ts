@@ -10,6 +10,7 @@ import {
 } from "src/domain/seller/entities/catalog.entity";
 import { Operator } from "src/domain/seller/entities/operator.entity";
 import { CatalogItem } from "src/domain/seller/entities/catalog-item.entity";
+import { CatalogMapper } from "../mappers/catalog.mapper";
 
 @Injectable()
 export class PrismaSellerRepository implements SellerRepository {
@@ -96,15 +97,13 @@ export class PrismaSellerRepository implements SellerRepository {
         id: catalogId.toString(),
         sellerId: sellerId.toString(),
       },
+      include: {
+        items: true,
+      },
     });
     if (!record) return null;
 
-    return Catalog.create({
-      id: new Id(record.id),
-      sellerId: new Id(record.sellerId),
-      name: record.name,
-      type: record.type as CatalogType,
-    });
+    return CatalogMapper.toDomain(record);
   }
 
   async addCatalogItem(

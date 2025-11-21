@@ -19,7 +19,13 @@ export class Catalog implements Entity {
   static create(input: CreateCatalogInput) {
     const id = input.id ?? Id.generate();
 
-    const catalog = new Catalog(id, input.sellerId, input.name, input.type);
+    const catalog = new Catalog(
+      id,
+      input.sellerId,
+      input.name,
+      input.type,
+      input.items ?? []
+    );
 
     catalog.validate();
 
@@ -78,4 +84,5 @@ export interface CreateCatalogInput {
   sellerId: Id;
   name: string;
   type: CatalogType;
+  items?: CatalogItem[];
 }

@@ -17,6 +17,7 @@ import {
 } from "./dtos/seller-service.dto";
 import { Cpf } from "src/domain/common/value-objects/cpf.value-object";
 import { Price } from "src/domain/sale/value-objects/price.value-object";
+import { CatalogMapper } from "src/infrastructure/mappers/catalog.mapper";
 
 @Injectable()
 export class SellerService {
@@ -100,7 +101,7 @@ export class SellerService {
       new Id(catalogId)
     );
     if (!catalog) throw new Error("Catalog not found");
-    return catalog.toJSON();
+    return CatalogMapper.toResponse(catalog);
   }
 
   async addCatalogItem(
