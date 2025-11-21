@@ -11,44 +11,61 @@ import { PrismaService } from "../prisma.service";
 export class PrismaOperationRepository implements OperationRepository {
   constructor(private prisma: PrismaService) {}
 
-  // Salva uma operação no banco
   async save(operation: Operation): Promise<Id> {
     await this.prisma.operation.create({
       data: {
-        id: operation.id.toString(), // convertendo Id para string
+        id: operation.id.toString(),
         name: operation.name,
         date: operation.date,
         status: operation.status,
+        sellers: {
+          connect: operation.sellerIds.map((id) => ({ id: id.toString() })),
+        },
       },
     });
-    return operation.id; // retorna o Id da operação criada
+    return operation.id;
   }
 
   async findById(id: Id): Promise<Operation | null> {
     const record = await this.prisma.operation.findUnique({
       where: { id: id.toString() },
+      include: {
+        sellers: true,
+      },
     });
 
     if (!record) return null;
 
-    return Operation.create({
+    const operation = Operation.create({
       id: new Id(record.id),
       name: record.name,
       date: record.date,
       status: record.status as OperationStatus,
     });
+
+    record.sellers.forEach((seller) => {
+      operation.addSeller(new Id(seller.id));
+    });
+
+    return operation;
   }
 
   async findAll(): Promise<Operation[]> {
-    const records = await this.prisma.operation.findMany();
+    const records = await this.prisma.operation.findMany({
+      include: { sellers: true },
+    });
 
-    return records.map((r) =>
-      Operation.create({
-        id: new Id(r.id),
-        name: r.name,
-        date: r.date,
-        status: r.status as OperationStatus,
-      })
-    );
+    return records.map((record) => {
+      const operation = Operation.create({
+        id: new Id(record.id),
+        name: record.name,
+        date: record.date,
+        status: record.status as OperationStatus,
+      });
+
+      record.sellers.forEach((s) => operation.addSeller(new Id(s.id)));
+
+      return operation;
+    });
   }
 }

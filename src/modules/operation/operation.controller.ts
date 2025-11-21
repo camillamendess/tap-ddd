@@ -25,7 +25,7 @@ export class OperationController {
     });
   }
 
-  @Post()
+  @Post(":operationId/activate")
   async activateOperation(@Param("operationId") operationId: string) {
     return await this.operationService.activateOperation(operationId);
   }

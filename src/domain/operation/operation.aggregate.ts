@@ -3,7 +3,7 @@ import { Id } from "../common/value-objects/id.value-object";
 
 export enum OperationStatus {
   PLANNED = "PLANNED",
-  ACTIVE = "ACTIVE"
+  ACTIVE = "ACTIVE",
 }
 
 export class Operation extends Aggregate {
@@ -12,7 +12,7 @@ export class Operation extends Aggregate {
     private _name: string,
     private _date: Date,
     private _status: OperationStatus = OperationStatus.PLANNED,
-    private _sellers: Id[] = [],
+    private _sellers: Id[] = []
   ) {
     super();
   }
@@ -24,7 +24,8 @@ export class Operation extends Aggregate {
       id,
       input.name,
       input.date,
-      input.status
+      input.status,
+      input.sellers ?? []
     );
 
     operation.validate();
@@ -47,7 +48,7 @@ export class Operation extends Aggregate {
   }
 
   addSeller(sellerId: Id) {
-    const exists = this._sellers.some(id => id.equals(sellerId));
+    const exists = this._sellers.some((id) => id.equals(sellerId));
 
     if (exists) {
       throw new Error("Seller already added to this operation");
@@ -57,7 +58,7 @@ export class Operation extends Aggregate {
   }
 
   removeSeller(sellerId: Id) {
-    const index = this._sellers.findIndex(id => id.equals(sellerId));
+    const index = this._sellers.findIndex((id) => id.equals(sellerId));
     if (index === -1) {
       throw new Error("Seller not found in this operation");
     }
@@ -74,7 +75,7 @@ export class Operation extends Aggregate {
       name: this._name,
       date: this._date,
       status: this._status,
-      sellers: this._sellers.map(s => s.toString())
+      sellers: this._sellers.map((s) => s.toString()),
     };
   }
 
@@ -100,4 +101,5 @@ export interface CreateOperationInput {
   name: string;
   date: Date;
   status?: OperationStatus;
+  sellers?: Id[];
 }
