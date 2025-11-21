@@ -14,6 +14,12 @@ export interface CreateOrderOutputDTO {
   sellerId: string;
   operatorId: string;
   catalogId: string;
-  items: SaleItem[];
+  items: {
+    catalogItemId: string;
+    name: string;
+    quantity: number;
+    price: number;
+    total: number;
+  }[];
   paid: boolean;
 }

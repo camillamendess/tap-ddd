@@ -55,6 +55,7 @@ export class Order extends Aggregate {
       throw new Error("Operator is required");
     if (!this._items || this._items.length === 0)
       throw new Error("Order must have at least one item");
+    if (this._total <= 0) throw new Error("Total must be greater than zero");
   }
 
   markAsPaid(): void {
@@ -99,6 +100,10 @@ export class Order extends Aggregate {
 
   get paidAt() {
     return this._paidAt;
+  }
+
+  get createdAt() {
+    return this._createdAt;
   }
 
   get items(): ReadonlyArray<SaleItem> {

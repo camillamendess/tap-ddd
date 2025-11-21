@@ -9,7 +9,13 @@ export class OrderController {
 
   @Post()
   async create(@Body() body: CreateOrderBody) {
-    return this.orderService.createOrder(body);
+    return this.orderService.createOrder({
+      operationId: body.operationId,
+      sellerId: body.sellerId,
+      operatorId: body.operatorId,
+      catalogId: body.catalogId,
+      items: body.items,
+    });
   }
 
   @Patch(":id/pay")
