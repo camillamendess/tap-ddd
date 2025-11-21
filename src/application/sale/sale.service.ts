@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
 import { SaleRepository } from "../../domain/sale/repositories/sale.repository.interface";
@@ -23,29 +23,11 @@ export class SaleService {
     const operation = await this.operationRepository.findById(
       new Id(input.operationId)
     );
-    if (!operation) throw new Error("Operation not found");
-
-    const sellerExists = operation.sellerIds.some((id) =>
-      id.equals(new Id(input.sellerId))
-    );
-    if (!sellerExists) throw new Error("Seller does not belong to operation");
+    if (!operation) throw new NotFoundException("Operation not found");
 
     const seller = await this.sellerRepository.findById(new Id(input.sellerId));
-    if (!seller) throw new Error("Seller not found");
 
-    const operatorExists: boolean = seller.operators.some((op: { id: Id }) =>
-      op.id.equals(new Id(input.operatorId))
-    );
-    if (!operatorExists) {
-      throw new Error("Operator does not belong to seller");
-    }
-
-    const catalogExists: boolean = seller.catalogs.some((cat: { id: Id }) =>
-      cat.id.equals(new Id(input.catalogId))
-    );
-    if (!catalogExists) {
-      throw new Error("Catalog does not belong to seller");
-    }
+    if (!seller) throw new NotFoundException("Seller not found");
 
     const sale = Sale.create({
       operationId: new Id(input.operationId),
