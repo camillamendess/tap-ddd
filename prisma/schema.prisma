@@ -64,6 +64,7 @@ model CatalogItem {
   category  String
   catalog   Catalog @relation(fields: [catalogId], references: [id])
   catalogId String
+  available Boolean @default(true)
 }
 
 model WorkAssignment {

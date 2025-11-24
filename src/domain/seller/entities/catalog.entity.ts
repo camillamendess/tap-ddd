@@ -52,6 +52,18 @@ export class Catalog implements Entity {
     this._items.push(item);
   }
 
+  setItemAvailability(itemId: Id, available: boolean) {
+    const item = this._items.find((i) => i.id.equals(itemId));
+
+    if (!item) throw new Error("Item not found");
+
+    if (available) {
+      item.markAvailable();
+    } else {
+      item.markUnavailable();
+    }
+  }
+
   toJSON() {
     return {
       id: this.id.toString(),

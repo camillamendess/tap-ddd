@@ -11,6 +11,7 @@ import {
   WorkRole,
 } from "./value-objects/assignment.value-object";
 import { Cpf } from "../common/value-objects/cpf.value-object";
+import { NotFoundException } from "@nestjs/common";
 
 export class Seller extends Aggregate {
   constructor(
@@ -68,7 +69,7 @@ export class Seller extends Aggregate {
     const operator = this._operators.find((op) => op.id.equals(operatorId));
 
     if (!operator) {
-      throw new Error("Operator not found");
+      throw new NotFoundException("Operator not found");
     }
 
     return operator;
@@ -98,7 +99,7 @@ export class Seller extends Aggregate {
   ): CatalogItem {
     const catalog = this._catalogs.find((c) => c.id.equals(catalogId));
     if (!catalog) {
-      throw new Error("Catalog not found");
+      throw new NotFoundException("Catalog not found");
     }
 
     const item = CatalogItem.create({
@@ -109,6 +110,14 @@ export class Seller extends Aggregate {
     catalog.addItem(item);
 
     return item;
+  }
+
+  setCatalogItemAvailability(catalogId: Id, itemId: Id, available: boolean) {
+    const catalog = this._catalogs.find((c) => c.id.equals(catalogId));
+
+    if (!catalog) throw new NotFoundException("Catalog not found");
+
+    catalog.setItemAvailability(itemId, available);
   }
 
   assignOperatorToCatalog(operatorId: Id, catalogId: Id, role: WorkRole) {

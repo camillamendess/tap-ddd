@@ -9,9 +9,7 @@
     "start:prod": "node dist/main",
     "test": "jest --verbose --passWithNoTests",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage"
-  },
-  "prisma": {
+    "test:cov": "jest --coverage",
     "seed": "ts-node prisma/seed.ts"
   },
   "author": "Camilla Mendes",

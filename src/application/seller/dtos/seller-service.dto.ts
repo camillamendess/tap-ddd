@@ -52,6 +52,19 @@ export interface AddCatalogItemOutputDTO {
   catalogId: string;
 }
 
+export interface SetCatalogItemAvailabilityInputDTO {
+  sellerId: string;
+  catalogId: string;
+  itemId: string;
+  available: boolean;
+}
+
+export interface SetCatalogItemAvailabilityOutputDTO {
+  itemId: string;
+  catalogId: string;
+  available: boolean;
+}
+
 export interface AssignOperatorInputDTO {
   sellerId: string;
   operatorId: string;

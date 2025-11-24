@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Param, Get } from "@nestjs/common";
+import { Body, Controller, Post, Param, Get, Patch } from "@nestjs/common";
 import {
   AddCatalogItemInputBody,
   AddOperatorInputBody,
@@ -81,6 +81,21 @@ export class SellerController {
       name: body.name,
       price: body.price,
       category: body.category,
+    });
+  }
+
+  @Patch(":sellerId/catalogs/:catalogId/items/:itemId/availability")
+  async setCatalogItemAvailability(
+    @Param("sellerId") sellerId: string,
+    @Param("catalogId") catalogId: string,
+    @Param("itemId") itemId: string,
+    @Body() available: boolean
+  ) {
+    return this.sellerService.setCatalogItemAvailability({
+      sellerId,
+      catalogId,
+      itemId,
+      available,
     });
   }
 

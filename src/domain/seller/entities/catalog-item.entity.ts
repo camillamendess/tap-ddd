@@ -9,7 +9,8 @@ export class CatalogItem implements Entity {
     private _name: string,
     private _price: Price,
     private _category: string,
-  ) { }
+    private _available: boolean
+  ) {}
 
   static create(input: CreateCatalogItemInput) {
     const id = input.id ?? Id.generate();
@@ -19,7 +20,8 @@ export class CatalogItem implements Entity {
       input.catalogId,
       input.name,
       input.price,
-      input.category
+      input.category,
+      true
     );
 
     catalogItem.validate();
@@ -32,6 +34,14 @@ export class CatalogItem implements Entity {
     if (!this._name) throw new Error("Name is required");
     if (!this._category) throw new Error("Category is required");
     if (!this._price) throw new Error("Price is required");
+  }
+
+  markUnavailable() {
+    this._available = false;
+  }
+
+  markAvailable() {
+    this._available = true;
   }
 
   get catalogId(): Id {
@@ -50,7 +60,9 @@ export class CatalogItem implements Entity {
     return this._category;
   }
 
-  // TODO - toJSON, fromJSON
+  get available(): boolean {
+    return this._available;
+  }
 }
 
 export interface CreateCatalogItemInput {

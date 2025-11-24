@@ -45,6 +45,10 @@ export class Operation extends Aggregate {
     if (!this._date) {
       throw new Error("Date is required");
     }
+
+    if (!Object.values(OperationStatus).includes(this._status)) {
+      throw new Error("Invalid operation status");
+    }
   }
 
   addSeller(sellerId: Id) {

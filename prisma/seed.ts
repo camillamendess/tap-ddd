@@ -78,6 +78,7 @@ async function main() {
         name: "Cerveja Heineken 600ml",
         price: 19,
         category: "Cervejas 600ml",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -85,6 +86,7 @@ async function main() {
         name: "Cerveja Budweiser 600ml",
         price: 16.9,
         category: "Cervejas 600ml",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -92,6 +94,7 @@ async function main() {
         name: "Cerveja Stella Artois 600ml",
         price: 17.6,
         category: "Cervejas 600ml",
+        available: false,
       },
       {
         id: randomUUID(),
@@ -99,6 +102,7 @@ async function main() {
         name: "Cachaça Serra das Almas 1L",
         price: 39.9,
         category: "Destilados",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -106,6 +110,7 @@ async function main() {
         name: "Vodka Smirnoff 1L",
         price: 59.9,
         category: "Destilados",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -113,6 +118,7 @@ async function main() {
         name: "Whisky Red Label 1L",
         price: 129.9,
         category: "Destilados",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -120,6 +126,7 @@ async function main() {
         name: "Cachaça Serra das Almas - Dose Única",
         price: 5,
         category: "Doses",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -127,6 +134,7 @@ async function main() {
         name: "Vodka Smirnoff - Dose Única",
         price: 8,
         category: "Doses",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -134,6 +142,7 @@ async function main() {
         name: "Whisky Red Label - Dose Única",
         price: 15,
         category: "Doses",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -141,6 +150,7 @@ async function main() {
         name: "Água Mineral",
         price: 3.0,
         category: "Bebidas Não Alcoólicas",
+        available: true,
       },
       {
         id: randomUUID(),
@@ -148,6 +158,7 @@ async function main() {
         name: "Coxinha",
         price: 7.5,
         category: "Salgado",
+        available: true,
       },
     ],
   });

@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { Seller } from "../../domain/seller/seller.aggregate";
 import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
@@ -14,6 +14,8 @@ import {
   CreateCatalogOutputDTO,
   CreateSellerInputDTO,
   CreateSellerOutputDTO,
+  SetCatalogItemAvailabilityInputDTO,
+  SetCatalogItemAvailabilityOutputDTO,
 } from "./dtos/seller-service.dto";
 import { Cpf } from "src/domain/common/value-objects/cpf.value-object";
 import { Price } from "src/domain/sale/value-objects/price.value-object";
@@ -123,6 +125,30 @@ export class SellerService {
       name: item.name,
       price: item.price.amount,
       catalogId: input.catalogId,
+    };
+  }
+
+  async setCatalogItemAvailability(
+    input: SetCatalogItemAvailabilityInputDTO
+  ): Promise<SetCatalogItemAvailabilityOutputDTO> {
+    const seller = await this.getSellerById(input.sellerId);
+
+    if (!seller) {
+      throw new NotFoundException("Seller not found");
+    }
+
+    seller.setCatalogItemAvailability(
+      new Id(input.catalogId),
+      new Id(input.itemId),
+      input.available
+    );
+
+    await this.sellerRepository.save(seller);
+
+    return {
+      itemId: input.itemId,
+      catalogId: input.catalogId,
+      available: input.available,
     };
   }
 

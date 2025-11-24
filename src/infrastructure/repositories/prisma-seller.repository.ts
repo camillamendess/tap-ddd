@@ -98,7 +98,11 @@ export class PrismaSellerRepository implements SellerRepository {
         sellerId: sellerId.toString(),
       },
       include: {
-        items: true,
+        items: {
+          where: {
+            available: true,
+          },
+        },
       },
     });
     if (!record) return null;
