@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { OperationModule } from "./modules/operation/operation.module";
+import { OperationModule } from "./api/operation/operation.module";
 import { PrismaService } from "./infrastructure/prisma.service";
-import { SellerModule } from "./modules/seller/seller.module";
-import { SaleModule } from "./modules/sale/sale.module";
-import { OrderModule } from "./modules/order/order.module";
+import { SellerModule } from "./api/seller/seller.module";
+import { SaleModule } from "./api/sale/sale.module";
+import { OrderModule } from "./api/order/order.module";
 
 @Module({
   imports: [OperationModule, SellerModule, SaleModule, OrderModule],
