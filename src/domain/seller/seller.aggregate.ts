@@ -21,8 +21,7 @@ export class Seller extends Aggregate {
     private _cpf: Cpf,
     private _operators: Operator[] = [],
     private _catalogs: Catalog[] = [],
-    private _assignments: WorkAssignment[] = [],
-    private _sales: Id[] = []
+    private _assignments: WorkAssignment[] = []
   ) {
     super();
   }
@@ -157,8 +156,28 @@ export class Seller extends Aggregate {
       operators: this._operators.map((op) => op.toString()),
       catalogs: this._catalogs.map((c) => c.toString()),
       assignments: this._assignments.map((a) => a.toString()),
-      sales: this._sales.map((s) => s.toString()),
     };
+  }
+
+  static fromJSON(input: any): Seller {
+    const seller = new Seller(
+      new Id(input.id),
+      new Id(input.operationId),
+      input.name,
+      new Cpf(input.cpf),
+      input.operators.map((opJson: any) => Operator.fromJSON(opJson)),
+      input.catalogs.map((cJson: any) => Catalog.fromJSON(cJson)),
+      input.assignments.map(
+        (aJson: any) =>
+          new WorkAssignment(
+            new Id(aJson.operatorId),
+            new Id(aJson.catalogId),
+            aJson.role
+          )
+      )
+    );
+
+    return seller;
   }
 
   get operationId(): Id {
@@ -183,10 +202,6 @@ export class Seller extends Aggregate {
 
   get assignments(): ReadonlyArray<WorkAssignment> {
     return this._assignments;
-  }
-
-  get sales(): ReadonlyArray<Id> {
-    return this._sales;
   }
 
   // TODO - Adicionar fromJSON()

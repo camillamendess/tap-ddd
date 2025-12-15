@@ -1,9 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { OperationRepository } from "../../domain/operation/repositories/operation.repository.interface";
-import {
-  Operation,
-  OperationStatus,
-} from "../../domain/operation/operation.aggregate";
+import { Operation } from "../../domain/operation/operation.aggregate";
 import { Id } from "../../domain/common/value-objects/id.value-object";
 import { PrismaService } from "../prisma.service";
 
@@ -36,18 +33,7 @@ export class PrismaOperationRepository implements OperationRepository {
 
     if (!record) return null;
 
-    const operation = Operation.create({
-      id: new Id(record.id),
-      name: record.name,
-      date: record.date,
-      status: record.status as OperationStatus,
-    });
-
-    record.sellers.forEach((seller) => {
-      operation.addSeller(new Id(seller.id));
-    });
-
-    return operation;
+    return Operation.fromJSON(record);
   }
 
   async findAll(): Promise<Operation[]> {
@@ -55,17 +41,6 @@ export class PrismaOperationRepository implements OperationRepository {
       include: { sellers: true },
     });
 
-    return records.map((record) => {
-      const operation = Operation.create({
-        id: new Id(record.id),
-        name: record.name,
-        date: record.date,
-        status: record.status as OperationStatus,
-      });
-
-      record.sellers.forEach((s) => operation.addSeller(new Id(s.id)));
-
-      return operation;
-    });
+    return records.map(Operation.fromJSON);
   }
 }

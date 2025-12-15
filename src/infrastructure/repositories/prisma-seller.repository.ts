@@ -31,14 +31,7 @@ export class PrismaSellerRepository implements SellerRepository {
 
   async findAll(): Promise<Seller[]> {
     const records = await this.prisma.seller.findMany();
-    return records.map((record) =>
-      Seller.create({
-        id: new Id(record.id),
-        operationId: new Id(record.operationId!),
-        name: record.name,
-        cpf: Cpf.create(record.cpf),
-      })
-    );
+    return records.map(Seller.fromJSON);
   }
 
   async findById(id: Id): Promise<Seller | null> {
@@ -48,16 +41,7 @@ export class PrismaSellerRepository implements SellerRepository {
 
     if (!record) return null;
 
-    if (!record.operationId) {
-      throw new Error("Seller record missing operationId");
-    }
-
-    return Seller.create({
-      id: new Id(record.id),
-      operationId: new Id(record.operationId),
-      name: record.name,
-      cpf: Cpf.create(record.cpf),
-    });
+    return Seller.fromJSON(record);
   }
 
   async remove(id: Id): Promise<Id> {

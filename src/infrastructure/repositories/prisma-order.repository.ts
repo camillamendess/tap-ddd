@@ -61,28 +61,12 @@ export class PrismaOrderRepository implements OrderRepository {
       );
     });
 
-    return Order.create({
-      id: new Id(record.id),
-      operationId: new Id(record.operationId),
-      sellerId: new Id(record.sellerId),
-      catalogId: new Id(record.catalogId),
-      operatorId: new Id(record.operatorId),
-      items,
-    });
+    return Order.fromJSON(record);
   }
 
   async findAll(): Promise<Order[]> {
     const records = await this.prisma.order.findMany();
 
-    return records.map((r) =>
-      Order.create({
-        id: new Id(r.id),
-        operationId: new Id(r.operationId),
-        sellerId: new Id(r.sellerId),
-        catalogId: new Id(r.catalogId),
-        operatorId: new Id(r.operatorId),
-        items: r.items as any,
-      })
-    );
+    return records.map(Order.fromJSON);
   }
 }

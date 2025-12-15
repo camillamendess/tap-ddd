@@ -78,6 +78,23 @@ export class Sale extends Aggregate {
     };
   }
 
+  static fromJSON(input: any): Sale {
+    return new Sale(
+      new Id(input.id),
+      new Id(input.operationId),
+      new Id(input.sellerId),
+      new Id(input.catalogId),
+      new Id(input.operatorId),
+      input.items.map(
+        (i: any) =>
+          new SaleItem(new Id(i.catalogItemId), i.name, i.quantity, i.price)
+      ),
+      input.total,
+      new Date(input.createdAt),
+      new Id(input.orderId)
+    );
+  }
+
   get operationId(): Id {
     return this._operationId;
   }

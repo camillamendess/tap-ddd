@@ -2,11 +2,7 @@ import { Entity } from "../../common/entity";
 import { Id } from "../../common/value-objects/id.value-object";
 
 export class Operator implements Entity {
-  constructor(
-    readonly id: Id,
-    private _sellerId: Id,
-    private _name: string
-  ) { }
+  constructor(readonly id: Id, private _sellerId: Id, private _name: string) {}
 
   static create(input: CreateOperatorInput) {
     const id = input.id ?? Id.generate();
@@ -30,6 +26,10 @@ export class Operator implements Entity {
     if (!this._sellerId || this._sellerId === null) {
       throw new Error("Seller is required");
     }
+  }
+
+  static fromJSON(input: any): Operator {
+    return new Operator(new Id(input.id), new Id(input.sellerId), input.name);
   }
 
   get name(): string {

@@ -74,6 +74,23 @@ export class Order extends Aggregate {
     this._status = OrderStatus.CANCELLED;
   }
 
+  static fromJSON(input: any): Order {
+    return new Order(
+      new Id(input.id),
+      new Id(input.operationId),
+      new Id(input.sellerId),
+      new Id(input.catalogId),
+      new Id(input.operatorId),
+      input.items.map(
+        (i: any) =>
+          new SaleItem(new Id(i.catalogItemId), i.name, i.quantity, i.price)
+      ),
+      input.total,
+      new Date(input.createdAt),
+      input.status
+    );
+  }
+
   get operationId() {
     return this._operationId;
   }

@@ -74,6 +74,16 @@ export class Catalog implements Entity {
     };
   }
 
+  static fromJSON(input: any): Catalog {
+    return new Catalog(
+      new Id(input.id),
+      new Id(input.sellerId),
+      input.name,
+      input.type,
+      input.items?.map((item: any) => CatalogItem.fromJSON(item)) ?? []
+    );
+  }
+
   get sellerId(): Id {
     return this._sellerId;
   }

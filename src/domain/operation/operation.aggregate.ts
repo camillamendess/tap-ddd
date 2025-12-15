@@ -83,6 +83,16 @@ export class Operation extends Aggregate {
     };
   }
 
+  static fromJSON(input: any): Operation {
+    return new Operation(
+      new Id(input.id),
+      input.name,
+      input.date,
+      input.status,
+      input.sellers?.map((s) => new Id(s.id)) ?? []
+    );
+  }
+
   get name(): string {
     return this._name;
   }

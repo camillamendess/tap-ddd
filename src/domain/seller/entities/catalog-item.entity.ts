@@ -44,6 +44,17 @@ export class CatalogItem implements Entity {
     this._available = true;
   }
 
+  static fromJSON(input: any): CatalogItem {
+    return new CatalogItem(
+      new Id(input.id),
+      new Id(input.catalogId),
+      input.name,
+      Price.fromNumber(input.price, "BRL"),
+      input.category,
+      input.available
+    );
+  }
+
   get catalogId(): Id {
     return this._catalogId;
   }

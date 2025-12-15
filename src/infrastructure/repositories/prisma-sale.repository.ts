@@ -32,15 +32,7 @@ export class PrismaSaleRepository implements SaleRepository {
 
     if (!record) return null;
 
-    return Sale.create({
-      id: new Id(record.id),
-      operationId: new Id(record.operationId),
-      sellerId: new Id(record.sellerId),
-      catalogId: new Id(record.catalogId),
-      operatorId: new Id(record.operatorId),
-      orderId: new Id(record.orderId),
-      items: record.items as any,
-    });
+    return Sale.fromJSON(record);
   }
 
   async findByOperation(operationId: Id): Promise<Sale[]> {
@@ -49,14 +41,9 @@ export class PrismaSaleRepository implements SaleRepository {
     });
 
     return records.map((r) =>
-      Sale.create({
-        id: new Id(r.id),
-        operationId: new Id(r.operationId),
-        sellerId: new Id(r.sellerId),
-        catalogId: new Id(r.catalogId),
-        operatorId: new Id(r.operatorId),
-        orderId: new Id(r.orderId),
-        items: r.items as any,
+      Sale.fromJSON({
+        ...r,
+        items: JSON.parse(r.items as string),
       })
     );
   }
@@ -64,14 +51,9 @@ export class PrismaSaleRepository implements SaleRepository {
   async findAll(): Promise<Sale[]> {
     const records = await this.prisma.sale.findMany();
     return records.map((r) =>
-      Sale.create({
-        id: new Id(r.id),
-        operationId: new Id(r.operationId),
-        sellerId: new Id(r.sellerId),
-        operatorId: new Id(r.operatorId),
-        catalogId: new Id(r.catalogId),
-        orderId: new Id(r.orderId),
-        items: r.items as any,
+      Sale.fromJSON({
+        ...r,
+        items: JSON.parse(r.items as string),
       })
     );
   }
