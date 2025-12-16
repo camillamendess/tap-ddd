@@ -46,7 +46,7 @@ export class SellerService {
 
   async getSellerById(id: string): Promise<Seller> {
     const seller = await this.sellerRepository.findById(new Id(id));
-    if (!seller) throw new Error("Seller not found");
+    if (!seller) throw new NotFoundException("Seller not found");
     return seller;
   }
 
@@ -73,7 +73,7 @@ export class SellerService {
   async getOperatorById(sellerId: string, operatorId: string) {
     const seller = await this.getSellerById(sellerId);
     const operator = seller.getOperatorById(new Id(operatorId));
-    if (!operator) throw new Error("Operator not found");
+    if (!operator) throw new NotFoundException("Operator not found");
     return operator;
   }
 
@@ -102,7 +102,7 @@ export class SellerService {
       new Id(sellerId),
       new Id(catalogId)
     );
-    if (!catalog) throw new Error("Catalog not found");
+    if (!catalog) throw new NotFoundException("Catalog not found");
     return CatalogMapper.toResponse(catalog);
   }
 

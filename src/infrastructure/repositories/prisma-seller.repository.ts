@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { SellerRepository } from "../../domain/seller/repositories/seller.repository.interface";
 import { Seller } from "../../domain/seller/seller.aggregate";
 import { Id } from "../../domain/common/value-objects/id.value-object";
@@ -116,7 +116,7 @@ export class PrismaSellerRepository implements SellerRepository {
     });
 
     if (!catalogRecord) {
-      throw new Error("Catalog not found");
+      throw new NotFoundException("Catalog not found");
     }
     return Catalog.create({
       id: new Id(catalogRecord.id),

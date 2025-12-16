@@ -1,3 +1,4 @@
+import { NotFoundException } from "@nestjs/common";
 import { Aggregate } from "../common/aggregate";
 import { Id } from "../common/value-objects/id.value-object";
 
@@ -64,7 +65,7 @@ export class Operation extends Aggregate {
   removeSeller(sellerId: Id) {
     const index = this._sellers.findIndex((id) => id.equals(sellerId));
     if (index === -1) {
-      throw new Error("Seller not found in this operation");
+      throw new NotFoundException("Seller not found in this operation");
     }
     this._sellers.splice(index, 1);
   }

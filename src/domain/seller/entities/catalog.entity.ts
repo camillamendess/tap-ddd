@@ -1,3 +1,4 @@
+import { NotFoundException } from "@nestjs/common";
 import { Entity } from "../../common/entity";
 import { Id } from "../../common/value-objects/id.value-object";
 import { CatalogItem } from "./catalog-item.entity";
@@ -55,7 +56,7 @@ export class Catalog implements Entity {
   setItemAvailability(itemId: Id, available: boolean) {
     const item = this._items.find((i) => i.id.equals(itemId));
 
-    if (!item) throw new Error("Item not found");
+    if (!item) throw new NotFoundException("Item not found");
 
     if (available) {
       item.markAvailable();

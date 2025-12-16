@@ -37,7 +37,9 @@ export class OrderService {
       );
 
       if (!catalogItem) {
-        throw new Error(`Catalog item not found: ${item.catalogItemId}`);
+        throw new NotFoundException(
+          `Catalog item not found: ${item.catalogItemId}`
+        );
       }
 
       return new SaleItem(

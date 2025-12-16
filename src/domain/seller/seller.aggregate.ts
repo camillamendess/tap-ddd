@@ -123,12 +123,12 @@ export class Seller extends Aggregate {
     const catalogExists = this._catalogs.some((c) => c.id.equals(catalogId));
 
     if (!catalogExists) {
-      throw new Error("Catalog not found for this seller");
+      throw new NotFoundException("Catalog not found for this seller");
     }
 
     const operatorExists = this._operators.some((o) => o.id.equals(operatorId));
     if (!operatorExists) {
-      throw new Error("Operator not found for this seller");
+      throw new NotFoundException("Operator not found for this seller");
     }
 
     const newAssignment = new WorkAssignment(operatorId, catalogId, role);

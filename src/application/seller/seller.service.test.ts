@@ -5,6 +5,7 @@ import { WorkRole } from "../../domain/seller/value-objects/assignment.value-obj
 import { PrismaSellerRepository } from "src/infrastructure/repositories/prisma-seller.repository";
 import { CatalogType } from "src/domain/seller/entities/catalog.entity";
 import { PrismaService } from "src/infrastructure/prisma.service";
+import { NotFoundException } from "@nestjs/common";
 
 const prismaMock = {
   operation: {
@@ -61,7 +62,7 @@ describe("SellerService", () => {
 
     expect(operator.name).toBe("Operador 1");
     const updatedSeller = await sellerRepository.findById(builtSeller.id);
-    if (!updatedSeller) throw new Error("Seller not found");
+    if (!updatedSeller) throw new NotFoundException("Seller not found");
 
     expect(updatedSeller.operators.length).toBe(1);
   });
@@ -79,7 +80,7 @@ describe("SellerService", () => {
     expect(catalog.name).toBe("Bebidas Frias");
 
     const updatedSeller = await sellerRepository.findById(seller.id);
-    if (!updatedSeller) throw new Error("Seller not found");
+    if (!updatedSeller) throw new NotFoundException("Seller not found");
 
     expect(updatedSeller.catalogs.length).toBe(1);
   });
