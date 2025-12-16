@@ -75,11 +75,10 @@ export class PrismaSellerRepository implements SellerRepository {
     return catalog;
   }
 
-  async findCatalogById(sellerId: Id, catalogId: Id): Promise<Catalog | null> {
+  async findCatalogById(catalogId: Id): Promise<Catalog | null> {
     const record = await this.prisma.catalog.findUnique({
       where: {
         id: catalogId.toString(),
-        sellerId: sellerId.toString(),
       },
       include: {
         items: {

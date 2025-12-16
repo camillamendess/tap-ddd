@@ -23,7 +23,6 @@ export class OrderService {
 
   async createOrder(input: CreateOrderInputDTO): Promise<CreateOrderOutputDTO> {
     const catalog = await this.sellerRepository.findCatalogById(
-      new Id(input.sellerId),
       new Id(input.catalogId)
     );
 

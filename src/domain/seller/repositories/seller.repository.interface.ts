@@ -11,10 +11,7 @@ export abstract class SellerRepository {
   abstract remove(id: Id): Promise<Id>;
   abstract addOperator(sellerId: Id, operator: Operator): Promise<Operator>;
   abstract createCatalog(sellerId: Id, catalog: Catalog): Promise<Catalog>;
-  abstract findCatalogById(
-    sellerId: Id,
-    catalogId: Id
-  ): Promise<Catalog | null>;
+  abstract findCatalogById(catalogId: Id): Promise<Catalog | null>;
   abstract addCatalogItem(
     sellerId: Id,
     catalogId: Id,

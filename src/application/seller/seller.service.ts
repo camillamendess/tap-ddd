@@ -97,9 +97,8 @@ export class SellerService {
     };
   }
 
-  async getCatalogById(sellerId: string, catalogId: string) {
+  async getCatalogById(catalogId: string) {
     const catalog = await this.sellerRepository.findCatalogById(
-      new Id(sellerId),
       new Id(catalogId)
     );
     if (!catalog) throw new NotFoundException("Catalog not found");
